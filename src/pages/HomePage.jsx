@@ -113,12 +113,12 @@ export default function HomePage({ showWelcome, onDismissWelcome }) {
           <p className="eyebrow">A little corner of the internet, just for you</p>
           <h2 id="story-title">For Ayesa.<br />For all the happy little moments.</h2>
           <p>
-            A birthday gift for <strong>Lyann Ayesa P. Barranta</strong> — our Eley.
+            A birthday gift for <strong>Lyann Ayesa P. Barranta</strong> — our Mia Marie Mae.
             Here’s to a new chapter filled with soft days, big dreams,
             and so much love.
           </p>
           <span className="handwritten">
-            happy 21st, lovely <span aria-hidden="true">♡</span>
+            happy 21st, pretty girl <span aria-hidden="true">♡</span>
           </span>
         </div>
         <div className="memory-pair">

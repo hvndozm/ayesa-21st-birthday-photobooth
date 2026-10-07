@@ -3,10 +3,10 @@ import BoothSteps from './BoothSteps.jsx'
 
 export default function BoothPageLayout({
   currentStep, eyebrow, title, description,
-  backTo = '/', backLabel = 'Back to the celebration', children,
+  backTo = '/', backLabel = 'Back to the celebration', className = '', children,
 }) {
   return (
-    <section className="booth-page container">
+    <section className={`booth-page container ${className}`}>
       <ActionLink to={backTo} variant="text" icon="back" className="back-link">
         {backLabel}
       </ActionLink>

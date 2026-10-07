@@ -4,17 +4,21 @@ import SiteLayout from './components/SiteLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
 import PhotoboothPage from './pages/PhotoboothPage.jsx'
 import DesignSelectionPage from './pages/DesignSelectionPage.jsx'
-import CameraReadyPage from './pages/CameraReadyPage.jsx'
+import CameraPage from './pages/CameraPage.jsx'
+import ResultReadyPage from './pages/ResultReadyPage.jsx'
+import usePhotoSession from './hooks/usePhotoSession.js'
 import MessagesPage from './pages/MessagesPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import './styles/site.css'
 import './styles/photobooth.css'
+import './styles/camera.css'
 
 const pageTitles = {
   '/': "Ayesa's 21st Birthday Photobooth",
   '/photobooth': "Photobooth · Ayesa's 21st Birthday",
   '/photobooth/designs': "Choose a design · Ayesa's 21st Birthday",
-  '/photobooth/camera': "Your booth is ready · Ayesa's 21st Birthday",
+  '/photobooth/camera': "Camera · Ayesa's 21st Birthday",
+  '/photobooth/result': "Your four memories · Ayesa's 21st Birthday",
   '/messages': "Birthday wishes · Ayesa's 21st Birthday",
 }
 
@@ -38,6 +42,7 @@ function RouteEffects() {
 export default function App() {
   // A refresh starts a new welcome experience; navigating home does not.
   const [welcomeDismissed, setWelcomeDismissed] = useState(false)
+  const [photoSession, setPhotoSession] = usePhotoSession()
 
   return (
     <>
@@ -52,7 +57,10 @@ export default function App() {
           } />
           <Route path="/photobooth" element={<PhotoboothPage />} />
           <Route path="/photobooth/designs" element={<DesignSelectionPage />} />
-          <Route path="/photobooth/camera" element={<CameraReadyPage />} />
+          <Route path="/photobooth/camera" element={
+            <CameraPage photoSession={photoSession} savePhotoSession={setPhotoSession} />
+          } />
+          <Route path="/photobooth/result" element={<ResultReadyPage photoSession={photoSession} />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

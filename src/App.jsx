@@ -12,6 +12,7 @@ import NotFoundPage from './pages/NotFoundPage.jsx'
 import './styles/site.css'
 import './styles/photobooth.css'
 import './styles/camera.css'
+import './styles/result.css'
 
 const pageTitles = {
   '/': "Ayesa's 21st Birthday Photobooth",
@@ -60,7 +61,9 @@ export default function App() {
           <Route path="/photobooth/camera" element={
             <CameraPage photoSession={photoSession} savePhotoSession={setPhotoSession} />
           } />
-          <Route path="/photobooth/result" element={<ResultReadyPage photoSession={photoSession} />} />
+          <Route path="/photobooth/result" element={
+            <ResultReadyPage photoSession={photoSession} clearPhotoSession={() => setPhotoSession(null)} />
+          } />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

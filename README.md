@@ -19,6 +19,7 @@ and `npm.cmd run dev` instead.
 ```sh
 npm run build       # Build the production frontend into dist/
 npm run preview     # Serve the production build locally
+npm test            # Check cover cropping and the standard layout geometry
 npm run lint        # Run the existing Oxlint checks
 ```
 
@@ -28,7 +29,7 @@ npm run lint        # Run the existing Oxlint checks
 - `/photobooth`: format selection with exactly three CSS layout previews.
 - `/photobooth/designs`: four compatible mock designs for the selected format.
 - `/photobooth/camera`: explicit permission and immediate capture inside the selected design.
-- `/photobooth/result`: four confirmed photos and a Phase 4 generation placeholder.
+- `/photobooth/result`: full-resolution Canvas photostrip preview and PNG download.
 - `/messages`: coming-soon page for future private birthday wishes.
 - Unknown paths show a friendly page with a link home.
 
@@ -113,7 +114,8 @@ object URLs and dimensions. Retakes replace one array entry; superseded object
 URLs are revoked. URLs are also revoked when the session is cleared or the app
 unmounts. Leaving the photobooth for Home/messages clears the session. Nothing
 is uploaded, logged, or stored in localStorage. Refresh clears the photos; the
-result route recovers to the camera with a readable explanation.
+result route shows a friendly recovery message and a Return to Photobooth link
+that retains the selected format and design.
 
 ### Development mock camera
 
@@ -131,6 +133,62 @@ and does not call getUserMedia.
 The query flag is ignored in production (`import.meta.env.DEV` gates the mode).
 Mock generation is isolated in `cameraCapture.js` and can be removed later.
 
+## Phase 4 photostrip generation
+
+After **Use These Photos**, the result page decodes all four captured Blobs and
+renders a new Canvas at the configured full resolution. The on-screen image is
+the resulting PNG, scaled with CSS; its displayed size never changes the export.
+All processing remains inside the browser.
+
+The standard rectangles are in `src/data/photoboothFormats.js`. Coordinates are
+pixels, in Photo 1 → Photo 4 order (left-to-right, then top-to-bottom for grids):
+
+| Format | PNG size | Frame size | Photo origins `(x, y)` |
+| --- | --- | --- | --- |
+| 2x6 | 600 × 1800 | 500 × 355 | (50, 150), (50, 530), (50, 910), (50, 1290) |
+| 6x4 | 1800 × 1200 | 750 × 500 | (130, 80), (920, 80), (130, 620), (920, 620) |
+| 4x6 | 1200 × 1800 | 500 × 667 | (80, 180), (620, 180), (80, 887), (620, 887) |
+
+`canvasImageUtils.js` calculates a centered source crop with the destination's
+aspect ratio, then uses the nine-argument `drawImage` API. Photos fill their
+frames without stretching. Phase 3 already stores selfie orientation in the
+pixels; the renderer never mirrors them again.
+
+`photostripRenderer.js` draws the design background, the four photos, then the
+foreground. The design data includes Canvas colors and pattern metadata:
+Sweet Bow uses blush dots and bows; Birthday Sparkle uses a cream/gold gradient
+and sparkles; Lavender Dream uses lavender dots and clouds; Love Letter uses
+rosy lines and hearts. Borders, artwork, and birthday text stay in the margins.
+
+Each design exposes an optional `overlaySrc`. When present, the renderer loads
+that image and draws it over the photos at `(0, 0)`, scaled to the exact canvas
+dimensions, instead of the placeholder foreground. Transparent windows reveal
+the photographs below. See `public/templates/README.md` for the PNG standard.
+No real template files are needed for the current designs.
+
+**Download PNG** is a native link to the final Blob URL, with a filename such as
+`ayesa-21st-2x6-sweet-bow.png`. The URL remains valid while the result page is
+open. A phone browser can download the PNG or open it for saving; no filesystem
+path or Web Share API is required. **Retake Photos** preserves the captured
+session and camera query. **Take Another** clears it and starts at `/photobooth`;
+**Home** returns to `/` and clears the session through the existing hook.
+
+The result hook owns its generated URL and revokes it on replacement or unmount.
+The renderer uses temporary URLs for retained Blobs, releases them after export
+or failure, and cancels image loading when the result page leaves. It never
+revokes the camera session's URLs. Pending results are discarded after leaving;
+partial image-load failures also release every successfully loaded resource.
+
+Loading and error states announce progress, keep Download hidden until ready,
+and offer Retry and a route back to the camera. Refresh without four photos
+shows recovery instead of attempting to render an empty session. No raw image
+data is stored in localStorage or IndexedDB.
+
+For an end-to-end test without hardware, use the development mock camera URL
+above, take four photos, confirm, and download. Mock photos use the same renderer
+and produce a real PNG at the dimensions in the table. Dimensions are shown
+quietly on the result page in development only.
+
 ## Structure
 
 ```text
@@ -138,24 +196,24 @@ src/
   App.jsx                 Routes, welcome state, and in-memory photo session
   main.jsx                React entry point and BrowserRouter
   components/             Layout, selection, live composition, and photo inspector
-  hooks/                  MediaStream lifecycle and photo-session URL cleanup
+  hooks/                  Camera/session lifecycle and generated-PNG ownership
   data/                   Central format and placeholder design configuration
   pages/                  Public pages, selection, camera, and result-ready flow
-  styles/                 Global, landing, photobooth, and camera styles
-  utils/                  Navigation and offscreen individual-frame capture
+  styles/                 Global, landing, photobooth, camera, and result styles
+  utils/                  Navigation, frame capture, crop math, and PNG renderer
   assets/                 Reserved for future custom birthday images
 public/
   favicon.svg             Original bow favicon
+  templates/README.md     Future transparent PNG template standard
 ```
 
 Custom birthday images can replace the three labeled homepage placeholders
 later; see `src/assets/README.md`. All current decorations are original CSS shapes
 and simple line icons, with no copyrighted character artwork or external assets.
 
-Final Canvas photostrip generation, PNG generation, downloading,
-message submission, uploads, backend integration, authentication, and dashboards
-are reserved for later phases. Phase 3 captures only individual camera frames,
-kept entirely inside the browser session.
+Message submission, uploads, backend integration, authentication, and dashboards
+are reserved for later phases. Captured frames and generated PNGs stay local;
+the guest explicitly saves the finished photostrip using Download PNG.
 
 ## Future hosting
 

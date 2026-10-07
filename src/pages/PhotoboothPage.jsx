@@ -1,56 +1,54 @@
-import Decoration from '../components/Decoration.jsx'
-import FeaturePage from '../components/FeaturePage.jsx'
-import PhotostripPreview from '../components/PhotostripPreview.jsx'
-
-const formats = [
-  { name: 'The classic strip', dimensions: '2 × 6 inches', layout: 'strip',
-    description: 'Four little moments, all in a row.' },
-  { name: 'The wide keepsake', dimensions: '6 × 4 inches', layout: 'landscape',
-    description: 'A landscape frame for happy memories.' },
-  { name: 'The portrait print', dimensions: '4 × 6 inches', layout: 'portrait',
-    description: 'A portrait frame, full of birthday love.' },
-]
+import { useSearchParams } from 'react-router-dom'
+import BoothPageLayout from '../components/BoothPageLayout.jsx'
+import BoothPreview from '../components/BoothPreview.jsx'
+import SelectionCard from '../components/SelectionCard.jsx'
+import SelectionContinue from '../components/SelectionContinue.jsx'
+import { photoboothFormats, getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
+import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
+import { createSelectionSearch } from '../utils/photoboothNavigation.js'
 
 export default function PhotoboothPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedFormat = getPhotoboothFormat(searchParams.get('format'))
+  const selectedDesign = getPlaceholderDesign(searchParams.get('design'), selectedFormat?.id)
+
+  function selectFormat(format) {
+    // Keep a compatible design when revisiting; changing format clears it.
+    const compatibleDesign = getPlaceholderDesign(searchParams.get('design'), format.id)
+    setSearchParams({
+      format: format.id,
+      ...(compatibleDesign ? { design: compatibleDesign.id } : {}),
+    }, { replace: true })
+  }
+
   return (
-    <FeaturePage
-      eyebrow="A little pose. A little birthday magic."
-      title={<>The booth is getting<br /><em>party-ready.</em></>}
-      description="Your next favorite keepsake is on its way. Soon you’ll choose a format, find a cute design, and capture four happy little moments."
-      note="The photobooth experience will arrive in a later phase. For now, have a look around the celebration."
-      illustration={
-        <div className="booth-preview" aria-hidden="true">
-          <PhotostripPreview />
-          <Decoration type="camera" className="booth-camera" />
-          <Decoration type="sparkle" className="booth-sparkle" />
-          <span className="handwritten">smiles coming soon ♡</span>
-        </div>
-      }
-      otherLink={{ to: '/messages', label: 'Visit birthday wishes' }}
-    >
-      <div className="format-preview-section">
-        <p className="eyebrow">A peek at what’s coming</p>
-        <h2>Three ways to keep a memory.</h2>
-        <p className="format-preview-note">
-          Format previews · selection will be available later
+    <BoothPageLayout currentStep={1} eyebrow="Four photos. One happy little keepsake."
+      title={<>Choose your photobooth <em>format.</em></>}
+      description="Tall and sweet, or a lovely little grid? Choose how you’d like your four birthday photos arranged.">
+      {searchParams.has('format') && !selectedFormat && (
+        <p className="booth-notice" role="status">
+          That format isn’t available. Choose one of the three below.
         </p>
-        <ul className="format-previews">
-          {formats.map((format) => (
-            <li key={format.layout}>
-              <div className="format-art" aria-hidden="true">
-                <div className={`format-mini format-mini--${format.layout}`}>
-                  {[1, 2, 3, 4].map((number) => <span key={number} />)}
-                </div>
-              </div>
-              <div>
-                <h3>{format.name}</h3>
-                <span className="format-dimensions">{format.dimensions}</span>
-                <p>{format.description}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+      )}
+      <div className="booth-format-grid" role="group" aria-label="Photobooth formats, select one">
+        {photoboothFormats.map((format) => (
+          <SelectionCard key={format.id} selectionId={format.id}
+            name={format.displayName} dimensions={getFormatDimensions(format)}
+            description={format.description}
+            preview={<BoothPreview format={format} />}
+            isSelected={selectedFormat?.id === format.id}
+            onSelect={() => selectFormat(format)}
+            className="format-card" selectLabel="Select format" />
+        ))}
       </div>
-    </FeaturePage>
+      <SelectionContinue
+        summary={selectedFormat ? `${selectedFormat.displayName} selected` : 'Start with your favorite shape'}
+        hint={selectedFormat ? getFormatDimensions(selectedFormat) : 'Choose one format to continue.'}
+        to={selectedFormat
+          ? `/photobooth/designs${createSelectionSearch(selectedFormat.id, selectedDesign?.id)}`
+          : null}
+        label="Choose a Design" />
+      <p className="booth-bottom-note">A little pose. A little birthday magic. All for Ayesa.</p>
+    </BoothPageLayout>
   )
 }

@@ -30,7 +30,7 @@ npm run lint        # Run the existing Oxlint checks
 - `/photobooth/designs`: four compatible mock designs for the selected format.
 - `/photobooth/camera`: explicit permission and immediate capture inside the selected design.
 - `/photobooth/result`: full-resolution Canvas photostrip preview and PNG download.
-- `/messages`: coming-soon page for future private birthday wishes.
+- `/messages`: private birthday-message submission, with nickname and letter.
 - Unknown paths show a friendly page with a link home.
 
 The welcome dialog appears on the first homepage visit in each app load. It can
@@ -248,6 +248,39 @@ See [Supabase setup and verification](docs/supabase-setup.md) for required
 resources, owner-scoped policy requirements, and manual Dashboard checks. No
 database/Storage policies are created or weakened by the application.
 
+## Phase 6 private birthday messages
+
+The homepage's message CTA opens `/messages`. Guests deliberately provide a
+nickname and birthday letter. Both fields are required, trimmed before saving,
+and validated before any backend work: nickname 1–40 characters, message
+1–2,000 characters. Native `maxLength` controls and a quiet letter counter help
+with the limits. The service repeats validation; database CHECK constraints
+remain the final enforcement layer.
+
+Message sending uses the same lazy Supabase client and Phase 5
+`ensureGuestSession` helper, without refactoring photostrip saving. Existing
+anonymous or permanent sessions are reused, and missing sessions share the same
+anonymous initialization. There is no login UI or sign-out after sending.
+
+An explicit form submission inserts only `owner_id`, trimmed `nickname`, trimmed
+`message`, and `is_read: false` into `public.birthday_messages`. Database defaults
+generate `id` and `created_at`. There is no `.select()` after insertion and no
+message query, feed, count, editing, or deletion. Letters remain plain text;
+the app neither renders submitted HTML nor interprets Markdown.
+
+A synchronous in-flight guard blocks repeated clicks before React disables the
+button. Sending runs only from the form event, never an effect or automatic
+retry. Success replaces the form with a thank-you and Back Home/Send Another
+Message actions. Sending another deliberately clears the fields. Errors keep
+both fields intact and offer Try Again. If a network response was lost, the UI
+explains that retrying might send the message twice. Requests and module loading
+are bounded; no background queue or local message persistence is implemented.
+
+Missing configuration reports messages temporarily unavailable without affecting
+the rest of the site. Labels, field-associated errors, live statuses, focus
+management, mobile input sizes, and reduced-motion support keep the flow usable.
+See the setup document for the INSERT-only table policy and manual row checks.
+
 ## Structure
 
 ```text
@@ -255,9 +288,9 @@ src/
   App.jsx                 Routes, welcome state, and in-memory photo session
   main.jsx                React entry point and BrowserRouter
   components/             Layout, selection, live composition, and photo inspector
-  hooks/                  Camera/session lifecycle and generated-PNG ownership
+  hooks/                  Camera/session lifecycle, PNG ownership, and message sending
   lib/                    Lazy publishable-key Supabase client
-  services/               Private PNG saving and current-result save guard
+  services/               Private PNG/message saving and current-result save guard
   data/                   Central format and placeholder design configuration
   pages/                  Public pages, selection, camera, and result-ready flow
   styles/                 Global, landing, photobooth, camera, and result styles
@@ -272,8 +305,8 @@ Custom birthday images can replace the three labeled homepage placeholders
 later; see `src/assets/README.md`. All current decorations are original CSS shapes
 and simple line icons, with no copyrighted character artwork or external assets.
 
-Message submission, template uploads, permanent login UI, and dashboards are
-reserved for later phases. Four source frames remain local; only the finished
+Template uploads, permanent login UI, and dashboards are reserved for later
+phases. Four source frames remain local; only the finished
 PNG gets a private gallery copy. The guest can also save it using Download PNG.
 
 ## Future hosting

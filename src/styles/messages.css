@@ -1,0 +1,72 @@
+.messages-page { padding-block: 20px 45px; }
+.message-back { margin-bottom: 26px; }
+.messages-layout { display: grid; gap: 26px; }
+.message-intro { text-align: center; }
+.message-intro h1 { margin: 18px 0 16px; font-size: clamp(34px, 9vw, 46px); line-height: 1.12; letter-spacing: -1.2px; }
+.message-intro h1 em { color: var(--berry); }
+.message-intro > p { max-width: 420px; margin-inline: auto; color: var(--muted); font-size: 14px; }
+.message-illustration { display: none; }
+.message-card { min-width: 0; padding: 23px 18px; border: 1px solid var(--line); border-radius: 24px; background: var(--paper); box-shadow: 0 12px 35px #943b6009; }
+.message-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 25px; }
+.message-card-heading .eyebrow { font-size: 9px; letter-spacing: 1.1px; }
+.message-card-heading h2 { margin-top: 7px; font-size: 27px; letter-spacing: -0.5px; }
+.message-card-heading > .decoration--bow { flex-shrink: 0; width: 43px; height: 38px; }
+.message-field + .message-field { margin-top: 22px; }
+.message-field label { display: block; font-size: 14px; font-weight: 600; }
+.message-field-hint { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.message-field input, .message-field textarea {
+  display: block; width: 100%; min-width: 0; margin-top: 10px; padding: 13px 14px;
+  border: 1px solid #bea5b2; border-radius: 12px; background: #fffdfb;
+  color: var(--ink); font: inherit; font-size: 16px; line-height: 1.65;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.message-field input { min-height: 50px; }
+.message-field textarea { min-height: 240px; resize: vertical; }
+.message-field input:focus, .message-field textarea:focus { border-color: var(--berry); box-shadow: 0 0 0 3px #f8e6ee; }
+.message-field [aria-invalid='true'] { border-color: #a23652; }
+.message-field input:disabled, .message-field textarea:disabled { opacity: 1; color: var(--muted); background: #f8f1f4; }
+.message-counter { margin-top: 6px; color: var(--muted); font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
+.message-counter-label { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.message-field-error, .message-validation-summary { margin-top: 8px; color: #9a294a; font-size: 12px; }
+.message-validation-summary { margin-block: 16px; }
+.message-send-error { margin-top: 20px; padding: 14px; border: 1px solid #deb3c2; border-radius: 12px; background: #fff0f4; }
+.message-send-error p:first-child { color: #8d2e51; font-size: 13px; font-weight: 600; }
+.message-send-error p + p { margin-top: 4px; color: var(--muted); font-size: 12px; }
+.message-privacy { display: flex; align-items: flex-start; gap: 9px; margin-top: 23px; color: var(--muted); font-size: 12px; }
+.message-privacy .icon { width: 16px; height: 16px; margin-top: 3px; color: var(--berry); }
+.message-submit { width: 100%; margin-top: 20px; font-size: 14px; }
+.message-submit:disabled { cursor: wait; background: #854460; transform: none; box-shadow: 0 3px 0 #e9cbd5; }
+.message-sending-status { min-height: 18px; margin-top: 11px; color: var(--muted); font-size: 11px; text-align: center; }
+.message-bottom-note { margin-top: 27px; color: var(--muted); font-size: 12px; text-align: center; }
+.message-card--success { display: grid; align-items: center; min-height: 480px; background: linear-gradient(145deg, #fffaf7, #f4edf9); }
+.message-success { padding-block: 15px; text-align: center; }
+.message-success-art { position: relative; display: grid; place-items: center; width: 125px; height: 125px; margin: 0 auto 27px; border: 1px solid #e3ccd9; border-radius: 50%; background: #f7dfeb; }
+.message-success-art > .icon { width: 54px; height: 54px; color: var(--berry); }
+.message-success-art .message-heart { position: absolute; animation: message-heart-float 3.8s ease-in-out infinite; }
+.message-success-art .message-heart--one { top: 8px; right: -4px; width: 24px; height: 24px; --heart-color: #b96c8e; }
+.message-success-art .message-heart--two { bottom: 7px; left: -7px; width: 18px; height: 18px; --heart-color: #ad81be; animation-delay: -1.5s; }
+.message-success-art .message-heart--three { top: -12px; left: 17px; width: 17px; height: 17px; animation-delay: -0.8s; }
+.message-success h2 { margin-block: 14px; font-size: 31px; line-height: 1.2; letter-spacing: -0.7px; }
+.message-success > p:not(.eyebrow) { color: var(--muted); font-size: 14px; }
+.message-success-actions { display: flex; flex-direction: column; gap: 13px; margin-top: 29px; }
+.message-success-actions .button { width: 100%; }
+@keyframes message-heart-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (min-width: 600px) {
+  .messages-page { padding-block: 25px 65px; }
+  .messages-layout { max-width: 650px; margin-inline: auto; gap: 32px; }
+  .message-card { padding: 32px; }
+  .message-intro h1 { font-size: 47px; }
+  .message-field textarea { min-height: 270px; }
+  .message-card-heading .eyebrow { font-size: 10px; }
+  .message-success-actions { align-items: center; }
+  .message-success-actions .button { width: auto; min-width: 230px; }
+}
+@media (min-width: 900px) {
+  .messages-layout { max-width: none; grid-template-columns: 0.9fr 1.1fr; align-items: start; gap: 55px; }
+  .message-intro { padding-top: 30px; text-align: left; }
+  .message-intro h1 { font-size: clamp(43px, 4.4vw, 57px); }
+  .message-intro > p { margin-inline: 0; font-size: 15px; }
+  .message-illustration { display: grid; place-items: center; margin-top: 27px; padding: 20px; border: 1px solid #ead8e4; border-radius: 28px; background: #f4eaf4; }
+  .message-card { padding: 36px; }
+  .message-card--success { min-height: 610px; }
+}

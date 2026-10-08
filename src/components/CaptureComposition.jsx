@@ -8,7 +8,7 @@ import { framePercentageStyle } from '../utils/frameGeometry.js'
 // Live capture and the result placeholder share the Phase 2 design classes.
 // This is a CSS preview, not a final composed image.
 export default function CaptureComposition({
-  format, design, photos, activeSlot = -1, renderCamera, onRetake, busy = false, flashSlot = -1, flashNumber = 0,
+  format, design, photos, activeSlot = -1, renderCamera, onRetake, busy = false, countdown = null, flashSlot = -1, flashNumber = 0,
 }) {
   const [inspectedSlot, setInspectedSlot] = useState(null)
   const custom = isCustomDesign(design)
@@ -28,7 +28,7 @@ export default function CaptureComposition({
                 <div className="capture-frame-image">
                   {photo ? (
                     <button type="button" className="capture-photo-button" aria-label={`Inspect Photo ${index + 1}`}
-                      onClick={() => setInspectedSlot(index)}>
+                      disabled={busy} onClick={() => setInspectedSlot(index)}>
                       <img src={photo.url} alt={`Captured photo ${index + 1}`} width={photo.width} height={photo.height} />
                     </button>
                   ) : active && renderCamera ? renderCamera(index) : (
@@ -36,6 +36,9 @@ export default function CaptureComposition({
                   )}
                   {index === flashSlot && flashNumber > 0 && <span key={flashNumber} className="camera-flash-overlay" aria-hidden="true" />}
                 </div>
+                {active && countdown !== null && <span className="camera-countdown" aria-hidden="true">
+                  <span key={countdown}>{countdown}</span>
+                </span>}
                 <span className="capture-slot-label" aria-hidden="true">{String(index + 1).padStart(2, '0')}{active && ' · Active'}</span>
                 {photo && onRetake && <button type="button" className="capture-retake-button"
                   aria-label={`Retake Photo ${index + 1}`} disabled={busy} onClick={() => onRetake(index)}>

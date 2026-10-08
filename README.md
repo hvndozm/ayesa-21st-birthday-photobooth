@@ -28,7 +28,7 @@ npm run lint        # Run the existing Oxlint checks
 - `/`: responsive birthday landing page, welcome dialog, and navigation CTAs.
 - `/photobooth`: format selection with exactly three CSS layout previews.
 - `/photobooth/designs`: four built-in designs plus up to four active custom designs for the selected format.
-- `/photobooth/camera`: explicit permission and immediate capture inside the selected design.
+- `/photobooth/camera`: explicit permission and immediate capture, with an optional 5-second timer.
 - `/photobooth/filter`: five local photo filters and the complete final-output preview.
 - `/photobooth/result`: the confirmed full-resolution PNG, download, and private gallery save.
 - `/messages`: private birthday-message submission, with nickname and letter.
@@ -94,8 +94,9 @@ browser; a phone visiting a plain HTTP LAN address may not have camera access.
 The selected built-in CSS design surrounds all four frames throughout capture.
 Custom designs use their actual transparent PNG over the same frame geometry. Only the
 active frame contains a live video, clipped with `object-fit: cover`. Each
-**Take Photo N** press captures one frame immediately, with no countdown or
-capture timer. The image stays in that slot and the live preview moves to the
+**Take Photo N** press captures one frame immediately by default. The optional
+**5s Timer** starts Off; turn it On to count 5, 4, 3, 2, 1 in the active frame
+before capturing. The image stays in that slot and the live preview moves to the
 first empty slot. The shutter briefly disables while its JPEG Blob is encoded.
 
 Each captured frame has a **Retake Photo N** arrow. It clears only that slot,
@@ -104,6 +105,16 @@ a captured image for a closer look. After four photos, the same composition
 remains on screen with retake controls and **Use These Photos**. Confirmation
 navigates to `/photobooth/filter` with the same format/design parameters. There
 is no automatic navigation or separate review screen.
+
+The timer choice stays in the current camera session across frames and retakes.
+It resets Off when a new camera page/session mounts and is never stored in
+Supabase, localStorage, or Filter/Result metadata. During countdown, the shutter,
+timer toggle, photo inspection/retakes, and camera switching are disabled.
+**Cancel** keeps the active frame empty, and **Close camera**, hiding/leaving the
+page, or camera errors cancel the countdown. Only one timeout runs at a time;
+stale callbacks cannot capture. The same capture function handles both modes,
+including development mock mode. See [timer verification and the production-phone
+checklist](docs/camera-timer-revision.md).
 
 The camera hook starts only on explicit actions, stops the old stream before
 switching, and releases all tracks on confirmation, close, hidden tabs, and unmount.

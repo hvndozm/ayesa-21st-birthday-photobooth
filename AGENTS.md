@@ -312,3 +312,36 @@ Production hosting:
 - Frontend: Vercel
 - Repository: GitHub
 - Backend/Auth/Database/Storage: Supabase
+
+## Optional Camera Timer
+
+The photobooth camera normally captures immediately when the shutter is pressed.
+
+The user may optionally enable a 5-second timer.
+
+Timer OFF:
+- Shutter captures immediately.
+- This remains the default behavior.
+
+Timer ON:
+- Pressing the shutter starts a 5-second countdown.
+- Show 5, 4, 3, 2, 1.
+- Capture immediately after the countdown.
+- The captured photo is inserted into the active frame.
+- The live camera then moves to the next empty frame as usual.
+
+The timer applies to both normal captures and individual retakes.
+
+The timer is a user-controlled camera option. Do not automatically enable it based on the selected template.
+
+The camera must preserve:
+- live photostrip composition
+- built-in designs
+- custom PNG overlays
+- front/rear camera switching
+- mock camera
+- mirroring
+- retakes
+- four-frame progression
+
+Countdown UI should appear over the active camera frame without hiding the rest of the photostrip.

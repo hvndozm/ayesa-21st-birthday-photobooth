@@ -6,6 +6,7 @@ import CameraView from '../components/CameraView.jsx'
 import CaptureComposition from '../components/CaptureComposition.jsx'
 import Icon from '../components/Icon.jsx'
 import useCamera from '../hooks/useCamera.js'
+import useCaptureTimer from '../hooks/useCaptureTimer.js'
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
 import useSelectedBoothDesign from '../hooks/useSelectedBoothDesign.js'
 import ActionLink from '../components/ActionLink.jsx'
@@ -19,6 +20,8 @@ const emptyPhotos = [null, null, null, null]
 function CaptureSession({ format, design, mockMode, photoSession, savePhotoSession, photosMissing }) {
   const navigate = useNavigate()
   const camera = useCamera(mockMode)
+  const timer = useCaptureTimer()
+  const cancelTimer = timer.cancel
   const matchesSession = photoSession?.formatId === format.id
     && photoSession?.designId === design.id && photoSession?.mockMode === mockMode
   const photos = matchesSession ? photoSession.photos : emptyPhotos
@@ -43,14 +46,17 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
   photosRef.current = photos
   const cameraIsOpen = camera.status === 'ready'
   const previewReady = cameraIsOpen && (mockMode || videoReady)
+  const isCountingDown = timer.countdown !== null
+  const controlsBusy = isCapturing || isCountingDown
   const designsUrl = `/photobooth/designs${createSelectionSearch(format.id, design.id)}`
 
   // Invalidate an in-flight JPEG encode when the camera closes or the page leaves.
   const cancelCapture = useCallback(() => {
+    cancelTimer()
     captureId.current += 1
     busy.current = false
     if (mounted.current) setIsCapturing(false)
-  }, [])
+  }, [cancelTimer])
 
   useEffect(() => {
     mounted.current = true
@@ -67,14 +73,14 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
   useEffect(() => {
     if (allCaptured) {
       confirmRef.current?.focus({ preventScroll: true })
-    } else if (previewReady) {
+    } else if (previewReady && !isCountingDown) {
       shutterRef.current?.focus({ preventScroll: true })
       if (scrollOnOpen.current) {
         panelRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
         scrollOnOpen.current = false
       }
     }
-  }, [previewReady, allCaptured, activeSlot])
+  }, [previewReady, allCaptured, activeSlot, isCountingDown])
 
   const handleVideoReady = useCallback(() => setVideoReady(true), [])
 
@@ -93,7 +99,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
   }
 
   async function takePhoto() {
-    if (busy.current || !previewReady || activeSlot < 0 || photosRef.current[activeSlot]) return
+    if (!mounted.current || document.hidden || busy.current || !previewReady || activeSlot < 0 || photosRef.current[activeSlot]) return
     busy.current = true
     const token = ++captureId.current
     const slot = activeSlot
@@ -102,7 +108,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
 
     try {
       const captureNumber = ++captureNumberRef.current
-      // Draw immediately on this press. Only encoding the single Blob is asynchronous.
+      // Draw immediately on the press or final timer tick. Only Blob encoding is asynchronous.
       const captured = mockMode
         ? await captureMockFrame(slot + 1, captureNumber)
         : await captureVideoFrame(videoRef.current, camera.facingMode === 'user')
@@ -134,8 +140,22 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
     }
   }
 
+  function handleShutter() {
+    if (busy.current || !previewReady || activeSlot < 0 || photosRef.current[activeSlot] || timer.isRunning()) return
+    if (timer.enabled) {
+      panelRef.current?.querySelector('.capture-composition')?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+      setMessage(`5 second timer started for Photo ${activeSlot + 1}. Hold your pose.`)
+    }
+    timer.trigger(takePhoto)
+  }
+
+  function cancelCountdown() {
+    timer.cancel()
+    setMessage(`Timer cancelled. Photo ${activeSlot + 1} is still active.`)
+  }
+
   async function retakePhoto(slot) {
-    if (busy.current || !photosRef.current[slot]) return
+    if (busy.current || timer.isRunning() || !photosRef.current[slot]) return
     const nextPhotos = [...photosRef.current]
     nextPhotos[slot] = null
     savePhotos(nextPhotos)
@@ -155,7 +175,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
   }
 
   function confirmPhotos() {
-    if (!allCaptured || busy.current) return
+    if (!allCaptured || busy.current || timer.isRunning()) return
     cancelCapture()
     camera.stopCamera()
     navigate(`/photobooth/filter${createCaptureSearch(format.id, design.id, mockMode)}`)
@@ -183,24 +203,35 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
           <span>{capturedCount}/4 captured</span>
         </div>
         <CaptureComposition format={format} design={design} photos={photos} activeSlot={activeSlot}
-          onRetake={retakePhoto} busy={isCapturing} flashSlot={flash.slot} flashNumber={flash.number}
+          onRetake={retakePhoto} busy={controlsBusy} countdown={timer.countdown} flashSlot={flash.slot} flashNumber={flash.number}
           renderCamera={cameraIsOpen ? () => (
             <CameraView videoRef={videoRef} stream={camera.stream} mockMode={mockMode}
               mirrored={camera.facingMode === 'user'} onReady={handleVideoReady}
               onPlaybackError={camera.playbackFailed} videoReady={videoReady} />
           ) : undefined} />
+        <div className="camera-timer-controls">
+          <button type="button" className="camera-icon-button camera-timer-toggle" aria-pressed={timer.enabled}
+            aria-label={`5 second timer, ${timer.enabled ? 'on' : 'off'}`} disabled={controlsBusy}
+            onClick={() => timer.setEnabled(!timer.enabled)}>
+            <span>5s Timer</span><strong>{timer.enabled ? 'On' : 'Off'}</strong>
+          </button>
+          {isCountingDown && <button type="button" className="camera-icon-button" onClick={cancelCountdown}
+            aria-label="Cancel countdown">Cancel</button>}
+        </div>
         {allCaptured ? <div className="camera-primary-action">
           <button ref={confirmRef} type="button" className="button button--primary camera-confirm" onClick={confirmPhotos}>
             <Icon name="check" />Use These Photos<Icon name="arrow" />
           </button>
         </div> : cameraIsOpen ? <>
           <div className="camera-primary-action">
-            <button ref={shutterRef} type="button" className="camera-shutter" disabled={!previewReady || isCapturing}
-              onClick={takePhoto} aria-label={`Capture Photo ${activeSlot + 1}`}>
-              <span><Icon name="camera" /></span>{isCapturing ? 'Saving your moment…' : `Take Photo ${activeSlot + 1}`}
+            <button ref={shutterRef} type="button" className="camera-shutter" disabled={!previewReady || controlsBusy}
+              onClick={handleShutter} aria-label={`Capture Photo ${activeSlot + 1}${timer.enabled ? ' with 5 second timer' : ''}`}>
+              <span><Icon name="camera" /></span>{isCountingDown ? 'Timer running…' : isCapturing ? 'Saving your moment…' : `Take Photo ${activeSlot + 1}`}
             </button>
           </div>
-          <p className="camera-shutter-hint">Tap to capture the active frame. Your next frame is ready right after.</p>
+          <p className="camera-shutter-hint">{timer.enabled
+            ? 'Tap for a 5-second countdown, then your next frame is ready.'
+            : 'Tap to capture the active frame. Your next frame is ready right after.'}</p>
         </> : <div className="camera-intro">
           <h2>{photos.some(Boolean) ? 'Your next little moment awaits.' : 'A little permission, then a little pose.'}</h2>
           <p>{mockMode ? 'Open the development preview to try these frames with generated photos.'
@@ -213,8 +244,12 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
           {camera.status === 'opening' && <button type="button" className="button button--text" onClick={closeCamera}>Cancel camera request</button>}
         </div>}
         {cameraIsOpen && <div className="camera-toolbar">
-          {!allCaptured && camera.canSwitch && <button type="button" className="camera-icon-button" disabled={isCapturing}
-            onClick={() => { setVideoReady(false); camera.switchCamera() }} aria-label="Switch front and rear camera">
+          {!allCaptured && camera.canSwitch && <button type="button" className="camera-icon-button" disabled={controlsBusy}
+            onClick={() => {
+              if (busy.current || timer.isRunning()) return
+              setVideoReady(false)
+              camera.switchCamera()
+            }} aria-label="Switch front and rear camera">
             <Icon name="flip" /><span>Switch camera</span>
           </button>}
           <button type="button" className="camera-icon-button" onClick={closeCamera}><Icon name="close" /><span>Close camera</span></button>

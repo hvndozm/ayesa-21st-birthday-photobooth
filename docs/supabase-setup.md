@@ -240,8 +240,8 @@ whose own `profiles.role` is `ayesa` or `admin` to SELECT `birthday_messages`,
 `photostrips`, and their private Storage objects. Ayesa also needs scoped UPDATE
 permission for `birthday_messages.is_read`. Keep the bucket **private**, RLS
 enabled, guest collection reads denied, and profile writes denied. The frontend
-creates or changes no policy and uses no privileged key. Admin's UI remains the
-Phase 7 placeholder even though its database role may allow reads.
+creates or changes no policy and uses no privileged key. Phase 9 now provides
+separate Admin views using the same private message/gallery services.
 
 Verify these deployed settings yourself in Supabase. Automated development tests
 use simulated private sessions/API responses and cannot certify production
@@ -270,7 +270,7 @@ policies or bucket configuration. No real Ayesa credentials are requested.
    horizontal overflow and all images/dialogs fit.
 8. Logout. Verify `/ayesa`, `/ayesa/messages`, and `/ayesa/gallery` redirect to
    `/ayesa/login` without showing private content. Repeat with an anonymous guest.
-   An Admin session must redirect those routes to the unchanged `/admin` placeholder.
+   An Admin session must redirect those routes to its own `/admin` dashboard.
 9. Recheck the public homepage, camera/mock capture, retakes, PNG generation,
    local download, private save, and guest birthday-message submission.
 
@@ -282,3 +282,85 @@ only fixed technical diagnostics (operation/resource/allowlisted code/status),
 never letter contents, credentials, signed URLs, or private paths. A successful
 SELECT with zero rows can also mean RLS filtered the collection; compare expected
 counts with the trusted Dashboard rather than assuming the table is empty.
+
+## Phase 9 Admin verification
+
+`public.photostrip_designs` and PRIVATE `template-designs` are assumed to already
+exist, with manually configured Admin-only SELECT/INSERT/UPDATE/DELETE policies.
+The table columns are `id,name,slug,format_id,storage_path,is_active,created_by,
+created_at`. Table defaults generate `id` and `created_at`. The app never creates
+resources, changes policies, publishes a bucket, or uses privileged credentials.
+
+All four Admin routes require the permanent profile role `admin`. Ayesa is
+redirected to `/ayesa`, guests to `/admin/login`. Template mutation services also
+resolve the current permanent session and verify its own Admin profile before
+writing. Existing message/gallery reads and scoped `is_read` updates are shared
+with Phase 8; no guest-message or guest-photostrip deletion is added.
+
+Private previews use batched 600-second signing. All gallery original downloads
+still use authenticated `photostrips.download()`. Template uploads use the
+original validated PNG, `contentType: image/png`, a format/random-UUID path,
+and `upsert: false`. Inserts send only the six required fields. Same-format slug
+duplicates are checked before upload; a database unique-constraint rejection
+is also reported as a duplicate and triggers cleanup after a definite rejection.
+
+Definite metadata failures attempt bounded deletion of only the just-uploaded
+file. Lost responses can hide committed writes, so uncertain metadata outcomes
+preserve the file and require inspection instead of an automatic retry. Template
+deletion re-reads the selected row, validates its exact format/UUID file path,
+removes that one file, then deletes only the matching ID/storage-path row. Empty
+acknowledgements are failures. If row deletion fails after confirmed file removal,
+Retry Record Deletion skips file removal using in-memory progress. A full browser
+refresh loses that progress; inspect/recover the record manually in Supabase if
+the file is already absent. See [template artwork](template-artwork.md).
+
+### Real Admin checklist
+
+No real Admin credentials are used by automated private tests. Log in yourself
+locally; do not paste credentials, tokens, or environment values into Codex.
+
+1. Log in at `/admin/login` with the real Admin account.
+2. Compare overview total/unread messages, saved photostrips, total templates,
+   and active templates with the trusted Supabase Dashboard. Counts use HEAD.
+3. Open `/admin/messages`; confirm the guest letters appear newest first.
+4. Open a full letter; confirm plain text, read status, All/Unread/Read, and refresh
+   persistence. Verify only `is_read` changed. Test Load More beyond 50 letters.
+5. Open `/admin/gallery`; confirm saved strips in all three formats.
+6. Open a larger preview and Download PNG. Verify its original full dimensions
+   (600×1800, 1800×1200, or 1200×1800); test Load More beyond 24 memories.
+7. Open `/admin/designs`, and Upload New Design.
+8. Upload a valid 2×6 PNG, exactly 600×1800, no larger than 10 MB. Check the local
+   preview and transparent openings before uploading.
+9. Confirm its private signed preview appears and the counts update.
+10. In the trusted Dashboard, confirm one `template-designs` object exists and
+    one matching `photostrip_designs` row exists, with Admin `created_by`, Active,
+    safe slug, and database-generated ID/timestamp.
+11. Disable it; refresh and confirm Inactive persists.
+12. Enable it again; refresh and confirm Active persists. Verify only `is_active`
+    changed in the row.
+13. Try the same normalized name/format: it must report a duplicate without
+    uploading or overwriting. Verify rejected JPEGs, renamed non-PNGs, oversize
+    files, corrupt PNGs, and wrong dimensions perform no upload.
+14. If practical, repeat with valid 6×4 and 4×6 artwork. Check proportions and
+    frame alignment using the artwork guide.
+15. Open Delete for your disposable test design; Cancel/Escape must change nothing.
+16. Confirm Delete Design. Verify the exact template object is gone.
+17. Verify its matching metadata row is gone. Existing guest photostrips and
+    birthday messages must remain unchanged.
+18. Check previews after ten minutes/backgrounding, and verify one missing preview
+    does not block other cards. Test forms, dialogs, focus, and controls at 320,
+    375, 390, 430, 768, and desktop widths.
+19. Logout. Verify all four Admin routes redirect to `/admin/login` without
+    private content; repeat with an anonymous guest. Ayesa must be redirected
+    away from every Admin route to `/ayesa`.
+20. Recheck Ayesa's three pages and the public homepage, existing local designs,
+    camera/mock capture, retakes, Canvas generation, download, private save, and
+    guest messages. Public flows must make no `photostrip_designs` requests.
+
+Verify **both buckets remain private** and guest/Ayesa template collection access
+is denied by deployed RLS. If any live Admin operation fails due to RLS, stop that
+step and report its operation, table/bucket, error code, and sanitized message.
+Do not disable RLS, publish a bucket, broaden policies, hardcode Admin UUIDs, or
+use `service_role`. Raw paths, letter contents, credentials, and signed URLs
+must not be included in reports. Policy/bucket configuration and real-account
+permissions cannot be certified by the simulated browser tests.

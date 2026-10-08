@@ -35,7 +35,9 @@ npm run lint        # Run the existing Oxlint checks
 - `/ayesa`: Ayesa's private overview with live letter/unread/memory counts.
 - `/ayesa/messages`: private letter inbox, read status, and All/Unread/Read filters.
 - `/ayesa/gallery`: private birthday album, larger previews, and original PNG downloads.
-- `/admin`: the role-protected Phase 7 placeholder.
+- `/admin`: Admin overview with live message, photostrip, and template counts.
+- `/admin/messages` and `/admin/gallery`: private reading and original PNG downloads.
+- `/admin/designs`: private template upload, preview, Enable/Disable, and confirmed deletion.
 - Unknown paths show a friendly page with a link home.
 
 The welcome dialog appears on the first homepage visit in each app load. It can
@@ -293,7 +295,7 @@ See the setup document for the INSERT-only table policy and manual row checks.
 Ayesa/Admin accounts and their matching `public.profiles` rows are created
 manually in Supabase. There is no public registration or login link in the
 birthday navigation. Use the private URLs above directly. Phase 8 extends only
-Ayesa's area; Admin still shows future-feature cards.
+Ayesa's area; Phase 9 adds the real Admin management area.
 
 `AuthProvider` shares a small in-memory controller through React context. It
 resolves the existing SDK session on initialization, observes auth changes, and
@@ -358,8 +360,9 @@ Custom birthday images can replace the three labeled homepage placeholders
 later; see `src/assets/README.md`. All current decorations are original CSS shapes
 and simple line icons, with no copyrighted character artwork or external assets.
 
-Template uploads and Admin management remain reserved for later phases.
-Ayesa's private inbox and gallery are available behind the existing role guard.
+Ayesa's private inbox/gallery and Admin management use the existing role guard.
+Guest selection and Canvas continue using local placeholder designs; uploaded
+templates are not connected to that workflow until Phase 10.
 Four source frames remain local; only the finished
 PNG gets a private gallery copy. The guest can also save it using Download PNG.
 
@@ -433,9 +436,9 @@ tests/privateDashboardService.test.js
 ```
 
 Modified files: `src/App.jsx`, this README, and `docs/supabase-setup.md`.
-The existing auth/controller/client, guest services, camera, Canvas, and Admin
-placeholder implementation remain unchanged. No package or environment change
-was needed.
+In Phase 8, the existing auth/controller/client, guest services, camera, Canvas,
+and Admin placeholder remained unchanged. No package or environment change was
+needed. Phase 9 replaces that Admin placeholder as described below.
 
 Phase 8 verification: 88 Node tests pass and the production build passes.
 Headless Chrome checks used simulated private sessions/API responses to exercise
@@ -448,6 +451,100 @@ submitted one message without duplicate requests. Mock retakes preserved the
 other frames; the native camera path was checked with a simulated media device
 and stopped its tracks on navigation. Real private-account/RLS/bucket verification
 remains manual; these checks do not certify the deployed Supabase policies.
+
+## Phase 9 — Admin dashboard and template management
+
+`/admin`, `/admin/messages`, `/admin/gallery`, and `/admin/designs` are nested
+behind the existing strict Admin role guard. Ayesa redirects to her own area;
+guests redirect to `/admin/login`. Identity changes remount the private layout,
+and session loss removes its data/dialogs. Auth and the shared Supabase client
+are unchanged. No package, environment, policy, or bucket setting is changed.
+
+The Admin overview uses five exact HEAD counts: total/unread letters, total
+photostrips, and total/active templates. Cards load and retry independently.
+`PrivateMessageInbox` and `PrivatePhotostripGallery` share Phase 8's data,
+pagination, read-state updates, signed previews, dialogs, and original downloads.
+Thin Ayesa/Admin page wrappers keep each area's headings separate. Message pages
+load 50 letters; both galleries and template management load 24 items at a time.
+All use Load More.
+
+`templateDesignService` reads only needed `photostrip_designs` fields and manages
+template mutations. PNG validation checks extension/MIME, size ≤10 MB, PNG
+signature/IHDR, successful browser decoding, and exact configured dimensions:
+600×1800, 1800×1200, or 1200×1800. Validation repeats at the service boundary
+before session/network work; artwork is never resized. Transparency is explained
+and shown over a checkerboard rather than scanned pixel by pixel. Local preview
+URLs are released on replacement, format changes, form close, successful upload,
+and unmount.
+
+Upload verifies a current permanent Admin session/profile, checks same-format
+slug duplicates, then uses private
+[`upload`](https://supabase.com/docs/reference/javascript/storage-from-upload)
+with `<format>/<random-uuid>.png`, `contentType: image/png`, and `upsert: false`.
+Metadata insertion sends only `name,slug,format_id,storage_path,is_active:true,
+created_by`. The database generates ID/time. A definite insertion rejection
+attempts single-file cleanup. Cleanup failures are reported; uncertain writes
+preserve files and block blind form resubmission for manual review.
+
+Template previews reuse batched 600-second signing, renewal, and individual
+reload controls. Enable/Disable updates only `is_active`, confirms the returned
+row, and updates local cards/counts. Delete opens a native accessible confirmation,
+re-reads the selected row, validates its format/UUID path, uses
+[`remove`](https://supabase.com/docs/reference/javascript/storage-from-remove)
+for exactly one template object, then removes the matching metadata row.
+Storage failure preserves metadata; a later metadata failure offers retry that
+skips confirmed file removal while its progress remains in memory. Recovery after
+a full browser refresh is documented in [template artwork](docs/template-artwork.md).
+No guest-photostrip/message deletion is implemented.
+
+The public selection config, its stable guest design IDs, camera flow, and
+Canvas renderer remain unchanged. Uploaded templates do not participate in the
+guest workflow yet. No Phase 10 integration is included.
+
+Created files:
+
+```text
+src/pages/AdminDashboardLayout.jsx
+src/pages/AdminOverviewPage.jsx
+src/pages/AdminMessagesPage.jsx
+src/pages/AdminGalleryPage.jsx
+src/pages/AdminDesignsPage.jsx
+src/components/PrivateMessageInbox.jsx
+src/components/PrivatePhotostripGallery.jsx
+src/components/TemplateUploadDialog.jsx
+src/components/TemplateDesignCard.jsx
+src/components/TemplatePreview.jsx
+src/components/TemplateDeleteDialog.jsx
+src/hooks/useTemplateFile.js
+src/services/templateDesignService.js
+src/utils/templateValidation.js
+src/utils/templateManagement.js
+src/styles/admin.css
+tests/templateDesignService.test.js
+docs/template-artwork.md
+```
+
+Modified: `src/App.jsx`, both Ayesa inbox/gallery wrappers, `BirthdayDialog.jsx`,
+`usePrivatePreviews.js`, `privateDashboardService.js`, the existing dashboard
+service tests, this README, the Supabase guide, and `public/templates/README.md`.
+The unused Phase 7 `PrivateDashboardPage.jsx` placeholder is retired.
+
+Real Admin upload/toggle/delete permissions, metadata persistence, original
+downloads, and both private-bucket settings require the
+[real Admin checklist](docs/supabase-setup.md#real-admin-checklist). Automated
+private browser checks use simulated sessions/API responses; no real permanent
+credentials are requested or used.
+
+Phase 9 verification: all 115 Node tests pass and `npm run build` passes.
+Headless Chrome checked Admin counts, message/gallery reuse, upload validation
+with actual PNG decoding, duplicate errors, original-file upload, metadata-failure
+cleanup, local object-URL cleanup, private previews, toggle persistence, confirmed
+single-file/row deletion and partial retry, empty/error states, and role denial
+at 320/375/390/430/768/1280 pixels. The complete Phase 8 browser regression also
+passed. Console errors were zero. Live anonymous guest saving/downloading and
+message submission passed, creating one test strip and one test message; mock
+retakes and the native camera path with a simulated media device also passed.
+These results do not certify real Admin credentials, permissions, or bucket flags.
 
 ## Future hosting
 

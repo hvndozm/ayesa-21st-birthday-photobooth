@@ -5,7 +5,7 @@ export const GALLERY_PAGE_SIZE = 24
 export const PREVIEW_LIFETIME_SECONDS = 600
 const messageFields = 'id,nickname,message,is_read,created_at'
 const galleryFields = 'id,storage_path,format_id,design_id,width,height,created_at'
-const safeCodes = new Set(['42501', '42P01', '42703', 'PGRST204', 'PGRST205', 'PGRST301', 'PGRST302', 'AccessDenied', 'Unauthorized', 'not_found'])
+const safeCodes = new Set(['42501', '23505', '23503', '23514', '42P01', '42703', 'PGRST204', 'PGRST205', 'PGRST301', 'PGRST302', 'AccessDenied', 'Unauthorized', 'not_found'])
 
 export class PrivateDashboardError extends Error {
   constructor(operation, resource, error = {}) {
@@ -22,7 +22,7 @@ export class PrivateDashboardError extends Error {
 
 // The route guard grants UI access; existing database/Storage RLS grants reads.
 // Never create a guest session here, change policies, or use a privileged key.
-async function request(operation, resource, build, options = {}) {
+export async function privateDataRequest(operation, resource, build, options = {}) {
   const client = options.client === undefined ? getSupabaseClient() : options.client
   if (!client) throw new PrivateDashboardError(operation, resource)
   const controller = new AbortController()
@@ -37,16 +37,29 @@ async function request(operation, resource, build, options = {}) {
     })
     if (controller.signal.aborted) return await deadline
     // Includes Storage's response body consumption, not just response headers.
-    const response = await Promise.race([Promise.resolve().then(() => build(client, controller.signal)), deadline])
-    if (!response || response.error) throw response?.error ?? new Error()
+    const response = await Promise.race([Promise.resolve().then(() => {
+      if (controller.signal.aborted) throw new PrivateDashboardError(operation, resource)
+      return build(client, controller.signal)
+    }), deadline])
+    if (!response || response.error) {
+      const failure = new PrivateDashboardError(operation, resource, {
+        code: response?.error?.code, status: response?.error?.status ?? response?.error?.statusCode ?? response?.status,
+      })
+      failure.uncertain = !!options.write && (!failure.status && !failure.code || failure.status >= 500)
+      throw failure
+    }
     return response
   } catch (error) {
-    throw error instanceof PrivateDashboardError ? error : new PrivateDashboardError(operation, resource, error)
+    const failure = error instanceof PrivateDashboardError ? error : new PrivateDashboardError(operation, resource, error)
+    if (options.write && failure.uncertain === undefined) failure.uncertain = !failure.status && !failure.code || failure.status >= 500
+    throw failure
   } finally {
     clearTimeout(timer)
     options.signal?.removeEventListener('abort', cancel)
   }
 }
+
+const request = privateDataRequest
 
 async function countRows(table, unreadOnly, options) {
   const response = await request('COUNT', table, (client, signal) => {
@@ -103,8 +116,9 @@ export async function markBirthdayMessageRead(messageId, options = {}) {
 export async function getPrivatePreviews(items, options = {}) {
   if (!items.length) return {}
   const paths = [...new Set(items.map(item => item.storage_path).filter(path => typeof path === 'string' && path))]
-  const response = paths.length ? await request('SIGN previews', 'photostrips Storage', (client) =>
-    client.storage.from('photostrips').createSignedUrls(paths, PREVIEW_LIFETIME_SECONDS), options) : { data: [] }
+  const bucket = options.bucket ?? 'photostrips'
+  const response = paths.length ? await request('SIGN previews', `${bucket} Storage`, (client) =>
+    client.storage.from(bucket).createSignedUrls(paths, PREVIEW_LIFETIME_SECONDS), options) : { data: [] }
   const byPath = new Map((response.data ?? []).map(item => [item.path, item]))
   const expiresAt = Date.now() + PREVIEW_LIFETIME_SECONDS * 1000
   return Object.fromEntries(items.map(item => {

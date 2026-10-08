@@ -11,7 +11,6 @@ import MessagesPage from './pages/MessagesPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import PrivateLogin from './components/PrivateLogin.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
-import PrivateDashboardPage from './pages/PrivateDashboardPage.jsx'
 import PrivateAccessState from './components/PrivateAccessState.jsx'
 import './styles/site.css'
 import './styles/photobooth.css'
@@ -24,6 +23,11 @@ const AyesaDashboardLayout = lazy(() => import('./pages/AyesaDashboardLayout.jsx
 const AyesaOverviewPage = lazy(() => import('./pages/AyesaOverviewPage.jsx'))
 const AyesaMessagesPage = lazy(() => import('./pages/AyesaMessagesPage.jsx'))
 const AyesaGalleryPage = lazy(() => import('./pages/AyesaGalleryPage.jsx'))
+const AdminDashboardLayout = lazy(() => import('./pages/AdminDashboardLayout.jsx'))
+const AdminOverviewPage = lazy(() => import('./pages/AdminOverviewPage.jsx'))
+const AdminMessagesPage = lazy(() => import('./pages/AdminMessagesPage.jsx'))
+const AdminGalleryPage = lazy(() => import('./pages/AdminGalleryPage.jsx'))
+const AdminDesignsPage = lazy(() => import('./pages/AdminDesignsPage.jsx'))
 
 const pageTitles = {
   '/': "Ayesa's 21st Birthday Photobooth",
@@ -38,6 +42,9 @@ const pageTitles = {
   '/ayesa/messages': "Your birthday letters · Ayesa's 21st Birthday",
   '/ayesa/gallery': "Your birthday memories · Ayesa's 21st Birthday",
   '/admin': "Birthday admin · Ayesa's 21st Birthday",
+  '/admin/messages': "Admin messages · Ayesa's 21st Birthday",
+  '/admin/gallery': "Admin gallery · Ayesa's 21st Birthday",
+  '/admin/designs': "Template designs · Ayesa's 21st Birthday",
 }
 
 function RouteEffects() {
@@ -91,7 +98,14 @@ export default function App() {
             <Route path="messages" element={<AyesaMessagesPage />} />
             <Route path="gallery" element={<AyesaGalleryPage />} />
           </Route>
-          <Route path="/admin" element={<ProtectedRoute role="admin"><PrivateDashboardPage area="admin" /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute role="admin">
+            <Suspense fallback={<PrivateAccessState loading area="admin" />}><AdminDashboardLayout /></Suspense>
+          </ProtectedRoute>}>
+            <Route index element={<AdminOverviewPage />} />
+            <Route path="messages" element={<AdminMessagesPage />} />
+            <Route path="gallery" element={<AdminGalleryPage />} />
+            <Route path="designs" element={<AdminDesignsPage />} />
+          </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

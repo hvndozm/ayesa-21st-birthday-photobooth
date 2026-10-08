@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { getBirthdayMessageCounts, getPhotostripCount, getBirthdayMessages, getPrivatePhotostrips,
-  markBirthdayMessageRead, getPrivatePreviews, downloadPrivatePhotostrip, PrivateDashboardError } from '../src/services/privateDashboardService.js'
+  markBirthdayMessageRead, getPrivatePreviews, downloadPrivatePhotostrip, PrivateDashboardError, privateDataRequest } from '../src/services/privateDashboardService.js'
 import { applyReadToPage, formatBirthdayDate, resolveMemoryLabels, memoryDownloadName } from '../src/utils/birthdayDashboard.js'
 import { getProtectedAccess } from '../src/auth/authAccess.js'
 
@@ -170,6 +170,18 @@ test('session/page cancellation aborts pending reads; cancelled work cannot repo
   assert.equal(calls.length, 1)
 })
 
+test('cancelling a queued private write prevents its non-abortable Storage operation from starting', async () => {
+  const controller = new AbortController()
+  let started = false
+  const pending = privateDataRequest('UPLOAD', 'template-designs Storage', () => {
+    started = true
+    return { data: {} }
+  }, { client: {}, signal: controller.signal, write: true })
+  controller.abort()
+  await assert.rejects(pending, PrivateDashboardError)
+  assert.equal(started, false)
+})
+
 test('central labels preserve all three output proportions and have friendly unknown fallbacks', () => {
   for (const [format_id, width, height] of [['2x6', 600, 1800], ['6x4', 1800, 1200], ['4x6', 1200, 1800]]) {
     const labels = resolveMemoryLabels({ ...memory, format_id, design_id: `${format_id}-sweet-bow`, width, height })
@@ -194,7 +206,7 @@ test('all Ayesa routes share the strict role guard: anonymous/session loss redir
   assert.deepEqual(getProtectedAccess({ ...auth, profile: { id, role: 'admin' } }, 'ayesa'), { kind: 'redirect', to: '/admin' })
   const app = await readFile(new URL('../src/App.jsx', import.meta.url), 'utf8')
   assert.match(app, /path="\/ayesa" element={<ProtectedRoute role="ayesa">[\s\S]*?<Route path="messages"[\s\S]*?<Route path="gallery"/)
-  assert.match(app, /path="\/admin".*PrivateDashboardPage area="admin"/)
+  assert.match(app, /path="\/admin" element={<ProtectedRoute role="admin">[\s\S]*?<AdminDashboardLayout/)
 })
 
 test('private services contain no public URL API or manual public Storage endpoint', async () => {

@@ -1,4 +1,4 @@
-# Future photostrip template PNGs
+# Photostrip template PNGs
 
 Phase 4 renders all four placeholder themes with native Canvas artwork. This
 folder does not need image files yet. Future designs can set `overlaySrc` to a
@@ -24,6 +24,12 @@ show the captured images. Template artwork replaces the Canvas placeholder
 borders, motifs, and text; the selected background remains below the photos.
 
 Local Vite public assets use paths such as `/templates/4x6/lavender-dream.png`.
-Future remotely hosted assets must allow anonymous CORS image loading to keep
-Canvas PNG export available. Uploads, admin validation, and storage are later
-milestones; no upload or backend functionality is included here.
+Phase 9 Admin uploads instead live in the PRIVATE `template-designs` bucket and
+are previewed with temporary signed URLs. Do not copy private uploaded artwork
+into this public folder. PNG validation, format assignment, Enable/Disable, and
+confirmed deletion are available at `/admin/designs`; the public photobooth and
+Canvas renderer still use their existing local placeholder designs.
+
+See [Admin template artwork](../../docs/template-artwork.md) for the maximum
+10 MB size, exact dimensions, transparent photo windows, and all frame positions.
+Phase 10 will separately integrate saved templates into the public workflow.

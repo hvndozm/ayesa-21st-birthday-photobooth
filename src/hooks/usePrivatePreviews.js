@@ -3,7 +3,7 @@ import { getPrivatePreviews } from '../services/privateDashboardService.js'
 
 const emptyItems = []
 
-export default function usePrivatePreviews(items = emptyItems) {
+export default function usePrivatePreviews(items = emptyItems, bucket = 'photostrips') {
   const [previews, setPreviews] = useState({})
   const [revision, setRevision] = useState(0)
   const requests = useRef(new Set())
@@ -13,13 +13,13 @@ export default function usePrivatePreviews(items = emptyItems) {
     setPreviews(previous => ({ ...previous, ...Object.fromEntries(batch.map(item => [item.id,
       previous[item.id]?.status === 'ready' ? previous[item.id] : { status: 'loading' }])) }))
     try {
-      const result = await getPrivatePreviews(batch, { signal })
+      const result = await getPrivatePreviews(batch, { signal, bucket })
       if (mounted.current && !signal.aborted) setPreviews(previous => ({ ...previous, ...result }))
     } catch {
       if (mounted.current && !signal.aborted) setPreviews(previous => ({ ...previous,
         ...Object.fromEntries(batch.map(item => [item.id, { status: 'unavailable' }])) }))
     }
-  }, [])
+  }, [bucket])
   useEffect(() => {
     const pending = requests.current
     mounted.current = true

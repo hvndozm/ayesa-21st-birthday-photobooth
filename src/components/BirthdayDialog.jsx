@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Icon from './Icon.jsx'
 
-export default function BirthdayDialog({ titleId, closeLabel, className = '', onClose, children }) {
+export default function BirthdayDialog({ titleId, closeLabel, className = '', onClose, closeDisabled = false, children }) {
   const dialogRef = useRef(null)
   useEffect(() => {
     const dialog = dialogRef.current
@@ -20,7 +20,7 @@ export default function BirthdayDialog({ titleId, closeLabel, className = '', on
 
   function keepFocus(event) {
     if (event.key !== 'Tab') return
-    const controls = [...dialogRef.current.querySelectorAll('button:not([disabled]), a[href], [tabindex="0"]')]
+    const controls = [...dialogRef.current.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')]
     const first = controls[0]
     const last = controls.at(-1)
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
@@ -28,7 +28,7 @@ export default function BirthdayDialog({ titleId, closeLabel, className = '', on
   }
   return <dialog ref={dialogRef} className={`birthday-dialog ${className}`} aria-labelledby={titleId}
     onCancel={event => { event.preventDefault(); onClose() }} onKeyDown={keepFocus}>
-    <button type="button" className="birthday-dialog-close" data-dialog-close aria-label={closeLabel} onClick={onClose}><Icon name="close" /></button>
+    <button type="button" className="birthday-dialog-close" data-dialog-close aria-label={closeLabel} disabled={closeDisabled} onClick={onClose}><Icon name="close" /></button>
     <div className="birthday-dialog-content">{children}</div>
   </dialog>
 }

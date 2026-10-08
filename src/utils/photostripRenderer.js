@@ -1,4 +1,7 @@
-import { canvasToPngBlob, drawImageCover, loadCanvasImage } from './canvasImageUtils.js'
+import { isCustomDesign } from '../data/photoboothDesigns.js'
+import { getPhotoboothFilter } from '../data/photoboothFilters.js'
+import { canvasToPngBlob, loadCanvasImage } from './canvasImageUtils.js'
+import { checkRenderCancelled, drawFilteredPhotograph, yieldRenderThread } from './photoboothFilterProcessing.js'
 
 function drawBackground(context, format, style) {
   const { canvasWidth: width, canvasHeight: height } = format
@@ -118,43 +121,67 @@ function drawPlaceholderForeground(context, format, design) {
 }
 
 // Full-resolution pixels come only from format configuration, never the CSS preview.
-export async function generatePhotostrip({ format, design, photos, signal }) {
+export async function generatePhotostrip({ format, design, photos, filterId = 'original', signal }) {
   if (!format || design?.formatId !== format.id || format.frames?.length !== 4 || photos?.length !== 4
     || photos.some((photo) => !photo || !(photo.blob instanceof Blob || photo.url))) {
     throw new Error('Four photos and a compatible format/design are required.')
   }
+  if (!getPhotoboothFilter(filterId)) throw new Error('Choose one of the five available photobooth filters.')
+  const custom = isCustomDesign(design)
+  if (custom && (!(design.overlayBlob instanceof Blob) || !design.overlayBlob.size)) {
+    throw new Error('The original custom birthday template must be loaded before rendering.')
+  }
+  checkRenderCancelled(signal)
   const canvas = document.createElement('canvas')
   canvas.width = format.canvasWidth
   canvas.height = format.canvasHeight
   const context = canvas.getContext('2d')
-  if (!context) throw new Error('Canvas rendering is unavailable in this browser.')
+  if (!context) {
+    canvas.width = 0
+    canvas.height = 0
+    throw new Error('Canvas rendering is unavailable in this browser.')
+  }
 
   const sources = photos.map((photo) => photo.blob ?? photo.url)
-  if (design.overlaySrc) sources.push(design.overlaySrc)
+  const overlaySource = custom ? design.overlayBlob : design.overlaySrc
+  if (overlaySource) sources.push(overlaySource)
   // Wait for every load to settle so partial failures cannot leak decoded resources.
   const loaded = await Promise.allSettled(sources.map((source) => loadCanvasImage(source, signal)))
   const resources = loaded.filter((result) => result.status === 'fulfilled').map((result) => result.value)
   try {
-    if (signal?.aborted) throw new DOMException('Rendering cancelled.', 'AbortError')
+    checkRenderCancelled(signal)
     const failure = loaded.find((result) => result.status === 'rejected')
     if (failure) throw failure.reason
+    if (custom && (resources[4].image.naturalWidth !== canvas.width || resources[4].image.naturalHeight !== canvas.height)) {
+      throw new Error('This birthday template does not match the selected format dimensions.')
+    }
     context.imageSmoothingEnabled = true
     context.imageSmoothingQuality = 'high'
 
     // Bottom → top: theme background, Photos 1–4, then template/foreground.
-    drawBackground(context, format, design.canvasStyle)
-    photos.forEach((photo, index) => {
+    if (custom) {
+      context.fillStyle = '#fffafc'
+      context.fillRect(0, 0, canvas.width, canvas.height)
+    } else {
+      drawBackground(context, format, design.canvasStyle)
+    }
+    for (let index = 0; index < photos.length; index += 1) {
       // Phase 3 already baked selfie mirroring into the pixels. Draw every image as-is.
-      drawImageCover(context, resources[index].image, format.frames[index])
-    })
-    if (design.overlaySrc) {
+      await drawFilteredPhotograph(context, resources[index].image, format.frames[index], filterId, {
+        seed: 127 + index * 1009,
+        signal,
+      })
+      await yieldRenderThread()
+      checkRenderCancelled(signal)
+    }
+    if (overlaySource) {
       context.drawImage(resources[4].image, 0, 0, canvas.width, canvas.height)
     } else {
       drawPlaceholderForeground(context, format, design)
     }
     const blob = await canvasToPngBlob(canvas)
-    if (signal?.aborted) throw new DOMException('Rendering cancelled.', 'AbortError')
-    return { blob, width: canvas.width, height: canvas.height }
+    checkRenderCancelled(signal)
+    return { blob, width: canvas.width, height: canvas.height, filterId }
   } finally {
     resources.forEach((resource) => resource.release())
     canvas.width = 0

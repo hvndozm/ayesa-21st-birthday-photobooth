@@ -3,6 +3,7 @@ import { isPermanentSession } from '../auth/authAccess.js'
 import { loadOwnProfile } from './privateAuthService.js'
 import { PrivateDashboardError, privateDataRequest } from './privateDashboardService.js'
 import { getPhotoboothFormat } from '../data/photoboothFormats.js'
+import { CUSTOM_DESIGNS_PER_FORMAT } from '../data/photoboothDesigns.js'
 import { validateTemplateName, validateTemplatePng } from '../utils/templateValidation.js'
 
 export const DESIGN_PAGE_SIZE = 24
@@ -57,6 +58,15 @@ export async function getTemplateDesignCounts(options = {}) {
   return { total, active }
 }
 
+export async function getCustomDesignCount(formatId, options = {}) {
+  if (!getPhotoboothFormat(formatId)) throw new TemplateDesignError('invalid-request')
+  const response = await query('COUNT custom format slots', (client, signal) => client.from(table)
+    .select('id', { count: 'exact', head: true }).eq('format_id', formatId).abortSignal(signal), options)
+  // Active and inactive custom rows both occupy a slot; local built-ins never do.
+  if (!Number.isInteger(response.count) || response.count < 0) throw new TemplateDesignError('count-check-failed')
+  return response.count
+}
+
 export async function getTemplateDesigns({ offset = 0, ...options } = {}) {
   if (!Number.isInteger(offset) || offset < 0) throw new TemplateDesignError('invalid-request')
   const response = await query('SELECT', (client, signal) => client.from(table).select(fields, { count: 'exact' })
@@ -73,6 +83,8 @@ export async function uploadTemplateDesign({ name: value, formatId, file }, opti
   await validateTemplatePng(file, formatId, options.validation)
   const admin = await requireAdmin(options)
   const settings = { ...options, client: admin.client }
+  const customCount = await getCustomDesignCount(formatId, settings)
+  if (customCount >= CUSTOM_DESIGNS_PER_FORMAT) throw new TemplateDesignError('custom-limit-reached')
   const duplicate = await query('CHECK duplicate', (client, signal) => client.from(table)
     .select('id', { head: true, count: 'exact' }).eq('format_id', formatId).eq('slug', slug).abortSignal(signal), settings)
   if (!Number.isInteger(duplicate.count)) throw new TemplateDesignError('duplicate-check-failed')

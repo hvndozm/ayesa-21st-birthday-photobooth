@@ -29,10 +29,10 @@ export default function PrivatePhotostripGallery({ titleId = 'birthday-gallery-t
               const labels = resolveMemoryLabels(memory)
               return <li key={memory.id} className="birthday-memory-card">
                 <button type="button" className="birthday-memory-open" onClick={() => setOpened(memory)}
-                  aria-label={`Open ${labels.designName}, ${labels.formatName}, ${formatBirthdayDate(memory.created_at)}`}>
+                  aria-label={`Open ${labels.designName}, ${labels.formatName}, ${labels.filterName} filter, ${formatBirthdayDate(memory.created_at)}`}>
                   <span className="birthday-memory-image"><PrivateMemoryPreview memory={memory} preview={previews[memory.id]} onError={unavailable} /></span>
                   <span className="birthday-memory-caption"><strong>{labels.designName}</strong><span>{labels.formatName}</span>
-                    <span>{labels.dimensions}</span><time dateTime={memory.created_at}>{formatBirthdayDate(memory.created_at)}</time></span>
+                    <span>{labels.dimensions} · {labels.filterName}</span><time dateTime={memory.created_at}>{formatBirthdayDate(memory.created_at)}</time></span>
                 </button>
                 {previews[memory.id]?.status === 'unavailable' && <button type="button" className="birthday-small-button" onClick={() => retry(memory)}>Reload preview</button>}
               </li>

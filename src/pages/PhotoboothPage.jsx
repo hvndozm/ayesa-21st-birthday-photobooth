@@ -5,19 +5,22 @@ import SelectionCard from '../components/SelectionCard.jsx'
 import SelectionContinue from '../components/SelectionContinue.jsx'
 import { photoboothFormats, getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
 import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
+import { isCustomDesignId } from '../data/photoboothDesigns.js'
 import { createSelectionSearch } from '../utils/photoboothNavigation.js'
 
 export default function PhotoboothPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedFormat = getPhotoboothFormat(searchParams.get('format'))
   const selectedDesign = getPlaceholderDesign(searchParams.get('design'), selectedFormat?.id)
+  const selectedDesignId = selectedDesign?.id ?? (isCustomDesignId(searchParams.get('design')) ? searchParams.get('design') : null)
 
   function selectFormat(format) {
     // Keep a compatible design when revisiting; changing format clears it.
     const compatibleDesign = getPlaceholderDesign(searchParams.get('design'), format.id)
     setSearchParams({
       format: format.id,
-      ...(compatibleDesign ? { design: compatibleDesign.id } : {}),
+      ...(compatibleDesign ? { design: compatibleDesign.id }
+        : selectedFormat?.id === format.id && selectedDesignId ? { design: selectedDesignId } : {}),
     }, { replace: true })
   }
 
@@ -45,7 +48,7 @@ export default function PhotoboothPage() {
         summary={selectedFormat ? `${selectedFormat.displayName} selected` : 'Start with your favorite shape'}
         hint={selectedFormat ? getFormatDimensions(selectedFormat) : 'Choose one format to continue.'}
         to={selectedFormat
-          ? `/photobooth/designs${createSelectionSearch(selectedFormat.id, selectedDesign?.id)}`
+          ? `/photobooth/designs${createSelectionSearch(selectedFormat.id, selectedDesignId)}`
           : null}
         label="Choose a Design" />
       <p className="booth-bottom-note">A little pose. A little birthday magic. All for Ayesa.</p>

@@ -1,4 +1,4 @@
-# Supabase setup for Phases 5–7
+# Supabase setup for Phases 5–10
 
 The frontend uses the installed `@supabase/supabase-js` SDK. It saves one copy
 of the existing high-resolution final PNG; it never uploads the four source
@@ -34,7 +34,8 @@ build artifact; the publishable configuration is intended for browser use.
   a failed save.
 - Keep RLS enabled on `public.photostrips` and on Storage's object access. The
   table must accept `owner_id` (UUID), `storage_path` (text), `format_id` (text),
-  `design_id` (text), `width` and `height` (integers). `created_at` and any other
+  `design_id` (text), `filter_id` (one of the five filter IDs), `width` and
+  `height` (integers). `created_at` and any other
   required database-generated fields need defaults.
 - Prefer a unique constraint on `storage_path` so one path cannot receive
   duplicate metadata. The frontend does not modify schema or policies.
@@ -77,9 +78,9 @@ are available in your project. See the
 and [operation helper documentation](https://supabase.com/docs/guides/storage/schema/helper-functions).
 Never broaden read access merely to make cleanup succeed.
 
-Future Ayesa/Admin policies will deliberately extend read access after their
-private authentication/dashboard phases. No guest gallery or read UI exists in
-Phase 5. Test access from two distinct browser sessions; a guest must not be able
+Scoped Ayesa/Admin policies extend collection read access for their permanent
+profile roles; see the private dashboard sections below. Guests have no gallery
+or message read UI. Test access from two distinct browser sessions; a guest must not be able
 to read another guest's file or row.
 
 ## Failure behavior
@@ -109,9 +110,10 @@ status, verify:
 1. Exactly one new final PNG exists in the private `photostrips` bucket, at the
    owner's UUID folder and a random filename. No raw frames were uploaded.
 2. Exactly one new `public.photostrips` row matches that path and owner. Its
-   format/design IDs and dimensions match the selected format, and its timestamp
+   format/design/filter IDs and dimensions match the selected output, and its timestamp
    comes from the database.
-3. Re-rendering or returning to the camera and confirming without edits adds
+3. Re-rendering or returning to the camera and confirming without photo edits,
+   with the same format/design/filter, adds
    no additional file/row. Taking another set creates one new result.
 4. A definite metadata failure attempts rollback; check for an orphan and verify
    owner-scoped cleanup permissions. Download must still work during failure.
@@ -139,8 +141,8 @@ Keep table RLS enabled. Guests use the `authenticated` role and need only scoped
 INSERT permission with `owner_id = auth.uid()` and `is_read = false`. Keep guest
 SELECT, UPDATE, and DELETE unavailable. No inserted row is requested back, so a
 successful INSERT requires no SELECT policy. Do not broaden read access to fix a
-submission error. Future Ayesa/Admin reading policies belong to their later
-private authentication phases.
+submission error. Ayesa/Admin reading policies are scoped to their permanent
+profile roles as described in the private dashboard sections below.
 
 Database CHECK constraints should enforce nonblank trimmed nickname/message
 and maximum lengths of 40/2,000 characters. The UI and service validate first,
@@ -195,13 +197,14 @@ own auth session persistence; it is separate from application-role storage.
 Login uses `signInWithPassword`, replacing a pre-existing anonymous session.
 The database profile role determines the destination at either private entrance.
 The SDK's `signOut` clears the permanent session; no new guest is created until
-a later public save/send explicitly needs one. A shared auth-operation queue
+a later public operation needs one: save/send, or Phase 10 scoped custom-template
+reads. A shared auth-operation queue
 coordinates guest creation with login/logout without changing upload/insert
 semantics. Profile work is deferred outside auth callbacks and old results are
 discarded after identity changes.
 
-Phase 7 established placeholder dashboards; Phase 8 adds the Ayesa inbox and
-gallery while Admin remains a placeholder. React guards are navigation UX;
+Phase 7 established placeholder dashboards; Phase 8 added the Ayesa inbox and
+gallery, and Phase 9 added the Admin dashboard/template management. React guards are navigation UX;
 database and Storage RLS remain the authorization boundary.
 
 ### Manual checks with the real permanent accounts
@@ -225,7 +228,8 @@ Enter them yourself locally; never paste them into Codex.
 6. Invalid credentials show a generic error. A permanent user without a valid
    profile must get access denial. A denied profile SELECT needs a scoped policy
    review; never fix it by granting unrestricted SELECT or disabling RLS.
-7. After permanent logout, use a public message or photostrip save to verify
+7. After permanent logout, use a public message, photostrip save, or custom-design
+   catalog to verify
    anonymous creation happens lazily and still works. Existing permanent sessions
    must be reused if public features are used before logging out.
 
@@ -286,7 +290,8 @@ counts with the trusted Dashboard rather than assuming the table is empty.
 ## Phase 9 Admin verification
 
 `public.photostrip_designs` and PRIVATE `template-designs` are assumed to already
-exist, with manually configured Admin-only SELECT/INSERT/UPDATE/DELETE policies.
+exist, with manually configured Admin management policies. Phase 10 also needs
+scoped active-template guest reads as described below; mutations remain Admin-only.
 The table columns are `id,name,slug,format_id,storage_path,is_active,created_by,
 created_at`. Table defaults generate `id` and `created_at`. The app never creates
 resources, changes policies, publishes a bucket, or uses privileged credentials.
@@ -355,12 +360,66 @@ locally; do not paste credentials, tokens, or environment values into Codex.
     away from every Admin route to `/ayesa`.
 20. Recheck Ayesa's three pages and the public homepage, existing local designs,
     camera/mock capture, retakes, Canvas generation, download, private save, and
-    guest messages. Public flows must make no `photostrip_designs` requests.
+    guest messages. The Phase 10 public custom catalog may read only active
+    templates for the selected format; built-in rendering remains independent.
 
-Verify **both buckets remain private** and guest/Ayesa template collection access
-is denied by deployed RLS. If any live Admin operation fails due to RLS, stop that
+Verify **both buckets remain private** and guest template mutations/inactive reads
+are denied by deployed RLS. Private role reads and new active-template guest reads
+must match the scopes below. If any live Admin operation fails due to RLS, stop that
 step and report its operation, table/bucket, error code, and sanitized message.
-Do not disable RLS, publish a bucket, broaden policies, hardcode Admin UUIDs, or
+Do not disable RLS, publish a bucket, grant unrestricted policies, hardcode Admin UUIDs, or
 use `service_role`. Raw paths, letter contents, credentials, and signed URLs
 must not be included in reports. Policy/bucket configuration and real-account
 permissions cannot be certified by the simulated browser tests.
+
+## Phase 10 hybrid-template and filter permissions
+
+The application assumes the Phase 10 resources are already configured manually.
+It runs no schema migrations or policy/bucket changes. The existing
+`public.photostrips.filter_id` must accept `original`, `blurry`, `digicam`,
+`polaroid`, or `mono`; historical rows default to Original and are not rewritten.
+Custom UUIDs remain text values in `photostrips.design_id`.
+
+Keep **both `template-designs` and `photostrips` PRIVATE**. An anonymous guest
+uses the existing lazy Auth session for private template signing/download;
+permanent sessions are preserved. Guest template reads must be scoped to the
+active custom artwork intended for the public photobooth, never user photographs,
+messages, roles, or template mutations.
+
+| Operation | Required deployed scope |
+| --- | --- |
+| Guest template metadata SELECT | Active custom designs with valid supported formats; the client additionally filters the currently selected `format_id`, requests only `id,name,format_id,storage_path,is_active`, and limits results to four |
+| Guest template signing/download | Only `template-designs` objects whose exact path belongs to an active matching custom-design row; no unrelated or inactive objects |
+| Guest photostrip/message SELECT | Denied; existing guest INSERT and scoped rollback behavior remain as documented above |
+| Ayesa/Admin gallery design-name SELECT | Authorized role-scoped `id,name` reads for referenced custom UUIDs; inactive rows may be visible where the configured role permits them |
+| Template INSERT/UPDATE/DELETE | Existing permanent Admin role only, including exact single-file cleanup/deletion scope |
+
+Client query parameters do not enforce RLS. Selected-format filtering prevents
+unnecessary reads; deployed policies must independently enforce active/template
+access and protect all private guest collections. A private bucket's signed URL
+temporarily grants access to that specific artwork; it does not make the bucket
+public. Previews last 600 seconds, stay in memory, and are not stored in the table.
+Final composition downloads the original authenticated PNG rather than relying
+on a preview URL.
+
+Private gallery custom-name lookup is one deduplicated `id,name` batch per page,
+with no `is_active` condition. Deleted or role-restricted names fall back to
+**Custom Birthday Design**, preserving already-saved flattened PNGs. Safe
+lookup diagnostics remain available without exposing raw backend content.
+
+Admin custom counts use selected-format exact HEAD reads, including active and
+inactive rows. The UI displays slots and the service repeats the count before
+Storage upload; four rows block another upload. This frontend check is not an
+atomic quota across concurrent tabs/accounts. No server-side quota transaction
+or new constraint is created in Phase 10.
+
+Use the [Phase 10 live verification checklist](phase-10-verification.md) to verify
+real guest template SELECT/sign/download, all five filters, final `filter_id`,
+custom names, quota recovery, private roles, and both bucket flags. These are
+manual checks unless separately reported as completed with the real project.
+
+If a live RLS operation fails, **stop that check** and report only the operation,
+table/bucket, allowlisted error code/status, and sanitized message. Do not make
+buckets public, disable RLS, use `service_role`, or add unrestricted policies.
+Real account credentials, environment values, signed URLs, paths, and submitted
+private content must not appear in reports.

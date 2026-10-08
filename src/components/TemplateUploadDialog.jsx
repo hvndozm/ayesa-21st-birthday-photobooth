@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import BirthdayDialog from './BirthdayDialog.jsx'
 import Icon from './Icon.jsx'
 import useTemplateFile from '../hooks/useTemplateFile.js'
+import usePrivateResource from '../hooks/usePrivateResource.js'
 import { photoboothFormats, getPhotoboothFormat } from '../data/photoboothFormats.js'
-import { uploadTemplateDesign } from '../services/templateDesignService.js'
+import { getCustomDesignCount, uploadTemplateDesign } from '../services/templateDesignService.js'
+import { CUSTOM_DESIGNS_PER_FORMAT } from '../data/photoboothDesigns.js'
 import { MAX_DESIGN_NAME_LENGTH, validateTemplateName } from '../utils/templateValidation.js'
 import { templateErrorMessage } from '../utils/templateManagement.js'
 
@@ -17,11 +19,15 @@ export default function TemplateUploadDialog({ onClose, onUploaded }) {
   const nameInput = useRef(null)
   const preview = useTemplateFile(file, formatId)
   const format = getPhotoboothFormat(formatId)
+  const loadCount = useCallback(options => getCustomDesignCount(formatId, options), [formatId])
+  const slots = usePrivateResource(loadCount)
+  const limitReached = slots.status === 'ready' && slots.data >= CUSTOM_DESIGNS_PER_FORMAT
   useEffect(() => () => request.current?.abort(), [])
 
   async function submit(event) {
     event.preventDefault()
     if (request.current || error?.uncertain || error?.cleanupFailed) return
+    if (slots.status !== 'ready' || limitReached) return
     try { validateTemplateName(name) } catch (failure) { setError(failure); nameInput.current?.focus(); return }
     if (preview.status !== 'ready') { setError({ message: 'Choose a valid PNG before uploading.', name: 'TemplateValidationError' }); return }
     const controller = new AbortController()
@@ -32,7 +38,10 @@ export default function TemplateUploadDialog({ onClose, onUploaded }) {
       await uploadTemplateDesign({ name, formatId, file }, { signal: controller.signal })
       if (!controller.signal.aborted) onUploaded()
     } catch (failure) {
-      if (!controller.signal.aborted) setError(failure)
+      if (!controller.signal.aborted) {
+        setError(failure)
+        if (failure?.code === 'custom-limit-reached') slots.retry()
+      }
     } finally {
       if (!controller.signal.aborted) setBusy(false)
       if (request.current === controller) request.current = null
@@ -55,6 +64,16 @@ export default function TemplateUploadDialog({ onClose, onUploaded }) {
           {photoboothFormats.map(option => <option key={option.id} value={option.id}>{option.widthInches} × {option.heightInches} · {option.displayName}</option>)}
         </select>
       </div>
+      <div className="admin-artwork-guide" aria-live="polite">
+        {slots.status === 'loading' ? <p>Checking custom design slots…</p>
+          : slots.status === 'error' ? <>
+            <p>We couldn’t check the available slots. Please retry before uploading.</p>
+            <button type="button" className="birthday-small-button" onClick={slots.retry}>Retry slot count</button>
+          </> : <>
+            <strong>{slots.data} of {CUSTOM_DESIGNS_PER_FORMAT} custom design slots used</strong>
+            <p>{limitReached ? templateErrorMessage({ code: 'custom-limit-reached' }) : 'Active and inactive designs both use a slot. Deleting a design frees one.'}</p>
+          </>}
+      </div>
       <div className="admin-artwork-guide" id="template-file-guide">
         <strong>{format.canvasWidth} × {format.canvasHeight} px · PNG · maximum 10 MB</strong>
         <p>The photo openings in your template must be transparent.</p>
@@ -75,11 +94,11 @@ export default function TemplateUploadDialog({ onClose, onUploaded }) {
       {error && <p className="admin-control-error" id="template-upload-error" role="alert">{templateErrorMessage(error)}</p>}
       <div className="admin-dialog-actions">
         <button type="button" className="button button--secondary" disabled={busy} onClick={close}>Cancel</button>
-        <button type="submit" className="button button--primary admin-upload-submit" disabled={busy || preview.status !== 'ready' || error?.uncertain || error?.cleanupFailed}>
+        <button type="submit" className="button button--primary admin-upload-submit" disabled={busy || preview.status !== 'ready' || slots.status !== 'ready' || limitReached || error?.uncertain || error?.cleanupFailed}>
           <Icon name="sparkle" />{busy ? 'Uploading design…' : 'Upload Design'}
         </button>
       </div>
-      <p className="admin-file-status" role="status">{busy ? 'Please keep this window open while your template is saved.' : 'Your artwork is saved privately for Admin preview.'}</p>
+      <p className="admin-file-status" role="status">{busy ? 'Please keep this window open while your template is saved.' : 'Your active artwork appears beside the built-in birthday designs.'}</p>
     </form>
   </BirthdayDialog>
 }

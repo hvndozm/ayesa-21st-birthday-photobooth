@@ -6,7 +6,11 @@ import PhotoboothPage from './pages/PhotoboothPage.jsx'
 import DesignSelectionPage from './pages/DesignSelectionPage.jsx'
 import CameraPage from './pages/CameraPage.jsx'
 import ResultReadyPage from './pages/ResultReadyPage.jsx'
+import FilterPage from './pages/FilterPage.jsx'
 import usePhotoSession from './hooks/usePhotoSession.js'
+import useGeneratedPhotostrip from './hooks/useGeneratedPhotostrip.js'
+import { getPhotoboothFormat } from './data/photoboothFormats.js'
+import { hasFourPhotos } from './utils/photoSessionSelection.js'
 import MessagesPage from './pages/MessagesPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import PrivateLogin from './components/PrivateLogin.jsx'
@@ -16,6 +20,7 @@ import './styles/site.css'
 import './styles/photobooth.css'
 import './styles/camera.css'
 import './styles/result.css'
+import './styles/filters.css'
 import './styles/auth.css'
 import './styles/birthday-dashboard.css'
 
@@ -34,6 +39,7 @@ const pageTitles = {
   '/photobooth': "Photobooth · Ayesa's 21st Birthday",
   '/photobooth/designs': "Choose a design · Ayesa's 21st Birthday",
   '/photobooth/camera': "Camera · Ayesa's 21st Birthday",
+  '/photobooth/filter': "Choose a filter · Ayesa's 21st Birthday",
   '/photobooth/result': "Your four memories · Ayesa's 21st Birthday",
   '/messages': "Birthday wishes · Ayesa's 21st Birthday",
   '/ayesa/login': "Ayesa's private entrance · Ayesa's 21st Birthday",
@@ -68,6 +74,14 @@ export default function App() {
   // A refresh starts a new welcome experience; navigating home does not.
   const [welcomeDismissed, setWelcomeDismissed] = useState(false)
   const [photoSession, setPhotoSession] = usePhotoSession()
+  const { pathname, search } = useLocation()
+  const parameters = new URLSearchParams(search)
+  const format = getPhotoboothFormat(photoSession?.formatId)
+  const outputPath = pathname.replace(/\/+$/, '') || '/'
+  const outputEnabled = ['/photobooth/filter', '/photobooth/result'].includes(outputPath)
+    && hasFourPhotos(photoSession, parameters.get('format'), parameters.get('design'),
+      import.meta.env.DEV && parameters.get('mockCamera') === 'true')
+  const output = useGeneratedPhotostrip(format, photoSession?.design, photoSession?.photos, photoSession?.filterId ?? 'original', outputEnabled)
 
   return (
     <>
@@ -86,7 +100,10 @@ export default function App() {
             <CameraPage photoSession={photoSession} savePhotoSession={setPhotoSession} />
           } />
           <Route path="/photobooth/result" element={
-            <ResultReadyPage photoSession={photoSession} clearPhotoSession={() => setPhotoSession(null)} />
+            <ResultReadyPage photoSession={photoSession} output={output} clearPhotoSession={() => setPhotoSession(null)} />
+          } />
+          <Route path="/photobooth/filter" element={
+            <FilterPage photoSession={photoSession} savePhotoSession={setPhotoSession} output={output} />
           } />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/ayesa/login" element={<PrivateLogin area="ayesa" />} />

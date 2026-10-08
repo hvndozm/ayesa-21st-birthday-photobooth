@@ -46,7 +46,7 @@ export default function BirthdayMemoryDialog({ memory, preview, onPreviewError, 
   return <BirthdayDialog titleId="birthday-memory-title" closeLabel="Close birthday memory" className="birthday-memory-dialog" onClose={onClose}>
     <p className="eyebrow">A happy little keepsake</p>
     <h2 id="birthday-memory-title">{labels.designName}</h2>
-    <p className="birthday-memory-info">{labels.formatName} · {labels.dimensions}</p>
+    <p className="birthday-memory-info">{labels.formatName} · {labels.dimensions} · {labels.filterName} filter</p>
     <time dateTime={memory.created_at}>{formatBirthdayDate(memory.created_at, true)}</time>
     <div className="birthday-memory-large"><PrivateMemoryPreview memory={memory} preview={preview} onError={onPreviewError} /></div>
     {preview?.status === 'unavailable' && <button type="button" className="birthday-small-button" onClick={() => onRetryPreview(memory)}>Reload preview</button>}

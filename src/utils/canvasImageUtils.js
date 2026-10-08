@@ -24,6 +24,7 @@ export function loadCanvasImage(source, signal) {
     const image = new Image()
     let settled = false
     let released = false
+    const timeoutId = setTimeout(() => fail(new Error('A photostrip image took too long to load.')), 15000)
     image.decoding = 'async'
     image.crossOrigin = 'anonymous'
 
@@ -34,6 +35,7 @@ export function loadCanvasImage(source, signal) {
       if (temporaryUrl) URL.revokeObjectURL(temporaryUrl)
     }
     function removeListeners() {
+      clearTimeout(timeoutId)
       image.onload = null
       image.onerror = null
       signal?.removeEventListener('abort', abort)

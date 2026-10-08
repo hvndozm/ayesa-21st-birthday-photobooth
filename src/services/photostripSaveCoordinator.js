@@ -1,4 +1,4 @@
-// Keep one save per immutable four-photo set and chosen design. Weak keys let
+// Keep one save per immutable four-photo set, chosen design, and filter. Weak keys let
 // completed sessions be collected after the existing photo lifecycle clears them.
 // This also covers returning from the camera without changing any photos.
 export async function loadPhotostripStorage(load = () => import('./photostripStorage.js'), timeoutMs = 12_000) {
@@ -23,7 +23,8 @@ export function createPhotostripSaveCoordinator(savePhotostrip) {
   return function startSave(photos, result, format, design, retry = false) {
     let selections = saves.get(photos)
     if (!selections) { selections = new Map(); saves.set(photos, selections) }
-    const key = `${format.id}:${design.id}`
+    const filterId = result.filterId === undefined ? 'original' : result.filterId
+    const key = `${format.id}:${design.id}:${filterId}`
     const previous = selections.get(key)
     if (previous && (previous.state.status === 'saving' || previous.state.status === 'success'
       || !retry || !previous.state.canRetry)) return previous
@@ -32,8 +33,8 @@ export function createPhotostripSaveCoordinator(savePhotostrip) {
     selections.set(key, entry)
     entry.promise = Promise.resolve()
       .then(() => savePhotostrip({
-        blob: result.blob, formatId: format.id, designId: design.id,
-        width: result.width, height: result.height,
+        blob: result.blob, formatId: format.id, designId: design.id, design,
+        width: result.width, height: result.height, filterId,
       }))
       .then(() => {
         entry.state = { status: 'success', canRetry: false }

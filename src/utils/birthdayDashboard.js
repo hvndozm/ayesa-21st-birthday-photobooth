@@ -1,5 +1,7 @@
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
 import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
+import { isCustomDesignId } from '../data/photoboothDesigns.js'
+import { getFilterDisplayName } from '../data/photoboothFilters.js'
 
 export function formatBirthdayDate(timestamp, includeTime = false) {
   const date = new Date(timestamp)
@@ -13,10 +15,12 @@ export function formatBirthdayDate(timestamp, includeTime = false) {
 export function resolveMemoryLabels(memory) {
   const format = getPhotoboothFormat(memory.format_id)
   const design = getPlaceholderDesign(memory.design_id, format?.id)
+  const customName = typeof memory.customDesignName === 'string' ? memory.customDesignName.trim().slice(0, 80) : ''
   return {
     formatName: format?.displayName ?? 'Birthday photostrip',
     dimensions: format ? getFormatDimensions(format) : 'A little keepsake',
-    designName: design?.name ?? 'Birthday design',
+    designName: design?.name ?? (isCustomDesignId(memory.design_id) ? customName || 'Custom Birthday Design' : 'Birthday design'),
+    filterName: getFilterDisplayName(memory.filter_id),
     width: memory.width > 0 ? memory.width : format?.canvasWidth ?? 600,
     height: memory.height > 0 ? memory.height : format?.canvasHeight ?? 1800,
   }

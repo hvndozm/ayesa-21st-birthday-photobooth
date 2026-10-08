@@ -27,9 +27,10 @@ npm run lint        # Run the existing Oxlint checks
 
 - `/`: responsive birthday landing page, welcome dialog, and navigation CTAs.
 - `/photobooth`: format selection with exactly three CSS layout previews.
-- `/photobooth/designs`: four compatible mock designs for the selected format.
+- `/photobooth/designs`: four built-in designs plus up to four active custom designs for the selected format.
 - `/photobooth/camera`: explicit permission and immediate capture inside the selected design.
-- `/photobooth/result`: full-resolution Canvas photostrip preview and PNG download.
+- `/photobooth/filter`: five local photo filters and the complete final-output preview.
+- `/photobooth/result`: the confirmed full-resolution PNG, download, and private gallery save.
 - `/messages`: private birthday-message submission, with nickname and letter.
 - `/ayesa/login` and `/admin/login`: private email/password entrances.
 - `/ayesa`: Ayesa's private overview with live letter/unread/memory counts.
@@ -51,9 +52,8 @@ indicators, a skip link, and focus management. Animations respect reduced motion
 
 ## Phase 2 selection flow
 
-Start Photobooth → Choose a format → Choose a Design → Continue to Camera.
-The last step opens the Phase 3 camera introduction with your selected format
-and mock design intact.
+Start Photobooth → Choose a format → Choose a Design → Continue to Camera
+→ Capture four photos → Filter → Result.
 
 Selections live in URL query parameters, with no shared state library or storage:
 
@@ -69,14 +69,17 @@ to Formats carry both compatible IDs; changing the format clears incompatible
 designs. Browser Back retains the selected format from the previous step.
 
 Missing or invalid formats on design/camera URLs redirect to format selection.
-A missing, unknown, or incompatible design on the camera URL redirects to the
-selected format's design page. Invalid selections on a selection page leave
-the continue button disabled and show a recovery hint.
+A missing or incompatible built-in design on the camera URL redirects to the
+selected format's design page. A custom UUID is resolved through Supabase and
+must exist, be active, and match the format; unavailable custom designs show
+Retry/Choose Another Design recovery. Invalid selections on a selection page
+leave the continue button disabled and show a recovery hint.
 
 Format metadata, including physical dimensions, target canvas dimensions, and
-layout identifiers, lives in `src/data/photoboothFormats.js`. The twelve mock
-design records (four for each format) live in `src/data/placeholderDesigns.js`.
-Previews use CSS and the configured aspect ratios, with no image generation.
+layout identifiers, lives in `src/data/photoboothFormats.js`. The twelve built-in
+design records (four for each format) remain in `src/data/placeholderDesigns.js`.
+Their previews retain the existing CSS themes. The Phase 10 hybrid catalog adds
+private custom PNG previews without replacing these local designs.
 
 Selection cards are native keyboard-accessible buttons with `aria-pressed`,
 visible checks, selected labels, and focus outlines. The step indicator marks
@@ -88,7 +91,8 @@ Press **Open Camera** to request video access (no microphone access). Nothing
 requests camera permission on mount. HTTPS or localhost is required by the
 browser; a phone visiting a plain HTTP LAN address may not have camera access.
 
-The selected CSS design surrounds all four frames throughout capture. Only the
+The selected built-in CSS design surrounds all four frames throughout capture.
+Custom designs use their actual transparent PNG over the same frame geometry. Only the
 active frame contains a live video, clipped with `object-fit: cover`. Each
 **Take Photo N** press captures one frame immediately, with no countdown or
 capture timer. The image stays in that slot and the live preview moves to the
@@ -98,7 +102,7 @@ Each captured frame has a **Retake Photo N** arrow. It clears only that slot,
 revokes its old object URL, and makes it active; other photos stay intact. Tap
 a captured image for a closer look. After four photos, the same composition
 remains on screen with retake controls and **Use These Photos**. Confirmation
-navigates to `/photobooth/result` with the same format/design parameters. There
+navigates to `/photobooth/filter` with the same format/design parameters. There
 is no automatic navigation or separate review screen.
 
 The camera hook starts only on explicit actions, stops the old stream before
@@ -116,14 +120,14 @@ the stored pixels as-is, without applying another mirror. Desktop devices withou
 facing-mode metadata use a different enumerated device when switching is available.
 A single-camera device remains fully usable.
 
-Photos are held in React state above the camera/result routes, as Blobs with
+Photos are held in React state above the camera/filter/result routes, as Blobs with
 object URLs and dimensions. Retakes replace one array entry; superseded object
 URLs are revoked. URLs are also revoked when the session is cleared or the app
 unmounts. Leaving the photobooth for Home/messages clears the session. The four
 source photos are never uploaded, logged, or stored in localStorage. Phase 5
 saves a private copy of the final PNG only. Refresh clears the local photos; the
-result route shows a friendly recovery message and a Return to Photobooth link
-that retains the selected format and design.
+filter/result routes show a friendly recovery message with Return to Camera
+while retaining the selected format, design, and development mock flag.
 
 ### Development mock camera
 
@@ -143,10 +147,11 @@ Mock generation is isolated in `cameraCapture.js` and can be removed later.
 
 ## Phase 4 photostrip generation
 
-After **Use These Photos**, the result page decodes all four captured Blobs and
-renders a new Canvas at the configured full resolution. The on-screen image is
-the resulting PNG, scaled with CSS; its displayed size never changes the export.
-All processing remains inside the browser.
+After **Use These Photos**, Filter defaults to Original and renders all four
+captured Blobs at the configured full resolution. The on-screen preview is the
+resulting PNG, scaled with CSS; its displayed size never changes the export.
+After **Continue to Result**, the same confirmed Blob is displayed, downloaded,
+and saved. All image processing remains inside the browser.
 
 The standard rectangles are in `src/data/photoboothFormats.js`. Coordinates are
 pixels, in Photo 1 → Photo 4 order (left-to-right, then top-to-bottom for grids):
@@ -168,22 +173,24 @@ Sweet Bow uses blush dots and bows; Birthday Sparkle uses a cream/gold gradient
 and sparkles; Lavender Dream uses lavender dots and clouds; Love Letter uses
 rosy lines and hearts. Borders, artwork, and birthday text stay in the margins.
 
-Each design exposes an optional `overlaySrc`. When present, the renderer loads
-that image and draws it over the photos at `(0, 0)`, scaled to the exact canvas
-dimensions, instead of the placeholder foreground. Transparent windows reveal
-the photographs below. See `public/templates/README.md` for the PNG standard.
-No real template files are needed for the current designs.
+Built-in designs retain their existing Canvas foreground and stable IDs; they
+are never converted to PNGs or migrated to Supabase. Custom templates use an
+original private Storage download attached as `overlayBlob`, decoded and checked
+against the exact output dimensions before drawing over the photos. Signed
+preview URLs are never used as final-render sources. See
+[template artwork](docs/template-artwork.md) for transparent window coordinates.
 
 **Download PNG** is a native link to the final Blob URL, with a filename such as
-`ayesa-21st-2x6-sweet-bow.png`. The URL remains valid while the result page is
+`ayesa-21st-2x6-sweet-bow-original.png`. The URL remains valid while the result page is
 open. A phone browser can download the PNG or open it for saving; no filesystem
 path or Web Share API is required. **Retake Photos** preserves the captured
 session and camera query. **Take Another** clears it and starts at `/photobooth`;
 **Home** returns to `/` and clears the session through the existing hook.
 
-The result hook owns its generated URL and revokes it on replacement or unmount.
+The app-level output hook owns one generated URL across Filter → Result and
+revokes it when inputs change or that output is no longer needed.
 The renderer uses temporary URLs for retained Blobs, releases them after export
-or failure, and cancels image loading when the result page leaves. It never
+or failure, and cancels image loading when rendering is replaced or disabled. It never
 revokes the camera session's URLs. Pending results are discarded after leaving;
 partial image-load failures also release every successfully loaded resource.
 
@@ -199,7 +206,8 @@ quietly on the result page in development only.
 
 ## Phase 5 private birthday-gallery copy
 
-The completed PNG Blob also goes to Supabase after generation. Local preview
+The confirmed PNG Blob goes to Supabase only from Result, after Filter preview
+and explicit continuation. Filter changes alone never upload a preview. Local preview
 and **Download PNG** work independently of gallery saving, including offline,
 missing configuration, rejected permissions, and network failures. No login or
 public gallery is shown to guests.
@@ -229,13 +237,14 @@ saving.
 Only one final PNG is uploaded to private bucket `photostrips`, at
 `<authenticated-user-uuid>/<random-uuid>.png`, with `image/png` and
 `upsert: false`. After successful upload, the service inserts `owner_id`,
-`storage_path`, `format_id`, `design_id`, `width`, and `height` into
+`storage_path`, `format_id`, `design_id`, `filter_id`, `width`, and `height` into
 `public.photostrips`. Database defaults handle `created_at`. It requests no
 public URL, gallery listing, or metadata SELECT.
 
 A weakly keyed save record identifies the current immutable photo set and
-format/design. StrictMode effects, status updates, repeated renders, and
-returning from the camera without editing photos share the same pending or
+format/design/filter. StrictMode effects, status updates, repeated renders, and
+returning from the camera without editing photos and choosing the same filter
+share the same pending or
 completed save. A definite failure retries only through **Try Again**; changing
 an individual photo creates a new result eligible for a new gallery copy.
 
@@ -325,8 +334,9 @@ Logout calls the SDK's `signOut` and returns to the appropriate private entrance
 It does not create an anonymous session or manually remove SDK storage entries.
 Guest creation and private login/logout share a small operation queue, so an
 older guest request cannot replace a permanent login. The existing Phase 5/6
-helper still reuses any valid session and creates a guest only for an explicit
-public save/send operation when no session exists.
+helper still reuses any valid session. Phase 10 also uses lazy anonymous
+initialization for scoped private custom-template reads when no session exists;
+public save/send behavior remains unchanged.
 
 React route guards protect navigation only. Database/Storage RLS remains the
 security boundary, as described in the
@@ -345,15 +355,15 @@ src/
   hooks/                  Camera/session lifecycle, PNG ownership, and message sending
   auth/                   Shared auth state and private-role access decisions
   lib/                    Lazy publishable-key Supabase client
-  services/               Private PNG/message saving and current-result save guard
-  data/                   Central format and placeholder design configuration
-  pages/                  Public pages, selection, camera, and result-ready flow
-  styles/                 Global, landing, photobooth, camera, and result styles
-  utils/                  Navigation, frame capture, crop math, and PNG renderer
+  services/               Guest saves, hybrid catalog, private data, and Admin mutations
+  data/                   Central formats, built-in/custom resolver, and five filters
+  pages/                  Public flow and protected Ayesa/Admin dashboards
+  styles/                 Plain CSS for public, photobooth/filter, and private pages
+  utils/                  Shared frame geometry, local filters, validation, and renderer
   assets/                 Reserved for future custom birthday images
 public/
   favicon.svg             Original bow favicon
-  templates/README.md     Future transparent PNG template standard
+  templates/README.md     Template asset guidance; custom PNGs remain private
 ```
 
 Custom birthday images can replace the three labeled homepage placeholders
@@ -361,8 +371,8 @@ later; see `src/assets/README.md`. All current decorations are original CSS shap
 and simple line icons, with no copyrighted character artwork or external assets.
 
 Ayesa's private inbox/gallery and Admin management use the existing role guard.
-Guest selection and Canvas continue using local placeholder designs; uploaded
-templates are not connected to that workflow until Phase 10.
+Guest selection and Canvas preserve all four local built-in themes and add
+active Admin-uploaded custom templates through the Phase 10 hybrid catalog.
 Four source frames remain local; only the finished
 PNG gets a private gallery copy. The guest can also save it using Download PNG.
 
@@ -393,7 +403,11 @@ The gallery fetches only needed metadata, 24 at a time. Batched
 previews last 600 seconds, renew before expiry and when the tab becomes visible,
 and remain in memory only. Missing previews have individual reload controls.
 Images retain their original proportions through `object-fit: contain`;
-format/design names come from the existing shared configuration.
+format/design names come from the shared resolver. Built-in names stay local;
+custom UUID names use one authorized `id,name` metadata batch per page, including
+inactive rows where the current role may read them. Deleted/restricted custom
+metadata falls back to **Custom Birthday Design** without hiding completed PNGs.
+Cards and detail dialogs also show a quiet filter label; legacy rows show Original.
 
 The detail dialog's Download PNG uses authenticated
 [`download`](https://supabase.com/docs/reference/javascript/storage-from-download)
@@ -497,9 +511,8 @@ skips confirmed file removal while its progress remains in memory. Recovery afte
 a full browser refresh is documented in [template artwork](docs/template-artwork.md).
 No guest-photostrip/message deletion is implemented.
 
-The public selection config, its stable guest design IDs, camera flow, and
-Canvas renderer remain unchanged. Uploaded templates do not participate in the
-guest workflow yet. No Phase 10 integration is included.
+Phase 9 preserved the public built-in selection and renderer. Phase 10 below
+adds uploaded templates alongside them, with no migration of the local designs.
 
 Created files:
 
@@ -545,6 +558,99 @@ passed. Console errors were zero. Live anonymous guest saving/downloading and
 message submission passed, creating one test strip and one test message; mock
 retakes and the native camera path with a simulated media device also passed.
 These results do not certify real Admin credentials, permissions, or bucket flags.
+
+## Phase 10 — Built-in/custom frames and local filters
+
+Every format supports **four permanent built-in designs plus up to four custom
+designs**: Sweet Bow, Birthday Sparkle, Lavender Dream, and Love Letter stay in
+local configuration with their original IDs, CSS capture appearance, and Canvas
+artwork. Custom designs use `public.photostrip_designs.id` as their stable UUID,
+are specific to one format, and appear publicly only while active.
+
+`publicDesignService.js` requests only the selected format's active custom rows
+and caps the collection at four. Selection uses 600-second signed previews from
+PRIVATE `template-designs`, with neutral photo placeholders behind transparent
+openings. Empty or failed custom collections leave the built-ins available;
+failed individual previews can be retried. Direct custom camera URLs revalidate
+ID, active state, and format before capture. The original private PNG is downloaded,
+validated, retained in memory, and displayed as a pointer-transparent overlay.
+Disabled/deleted/wrong-format designs offer recovery rather than a replacement.
+
+`frameGeometry.js` derives responsive percentages from the same configured
+pixel rectangles used by Canvas. Live video and captured images fill those exact
+windows; custom overlays retain 1:3, 3:2, or 2:3 proportions. Artwork requires
+transparent openings and exact **600×1800, 1800×1200, or 1200×1800** dimensions.
+Uploads stay PNG-only, at most 10 MB, and are never resized. See the
+[artwork guide](docs/template-artwork.md).
+
+Admin upload displays a selected-format HEAD count and checks it again before
+Storage upload. **Active and inactive designs both occupy the four custom slots**;
+deleting one frees a slot. A fifth upload or an unavailable count is blocked
+before uploading. This browser-side count is not an atomic cross-browser quota:
+two concurrent Admin uploads could both pass the same count. The app does not
+add a database transaction, constraint, or policy to enforce a server-side quota.
+
+The workflow is now **Camera → Filter → Result**. Filter has exactly five choices
+from `photoboothFilters.js`: Original, Blurry, Digicam, Polaroid, and Mono. One
+selection applies to every photo. Original retains the previous crop/render
+path; Blurry blends mild softening with gentle brightness/contrast changes;
+Digicam adds controlled contrast, saturation, cool highlights, and light grain;
+Polaroid adds warm faded color and light grain; Mono converts photo pixels to
+true grayscale while retaining detail. Bows, text, borders, background colors,
+and custom PNG artwork never pass through the photo filter.
+
+`photoboothFilterProcessing.js` works on one frame-sized native Canvas at a time,
+yields between row chunks, and uses seeded deterministic grain.
+`generatePhotostrip({format, design, photos, filterId, signal})` is the single
+renderer for Filter and Result. It draws the base, filtered photos, then built-in
+foreground or original full-resolution custom PNG, and returns an exact-size
+PNG Blob. The authoritative preview shows the entire composition. Only one
+full-resolution filter output is active, rapid changes cancel stale work, and
+Continue waits for the selected preview to load. Filter → Result retains that
+same Blob/URL, so the displayed, downloaded, and saved pixels match exactly.
+
+Only Result starts the existing private gallery save. It uploads **one flattened
+PNG**, never raw photos, filter intermediates, thumbnails, or the template again.
+New metadata includes `filter_id` with one of the five IDs; historical rows remain
+unchanged. Built-in IDs remain compatible; custom UUIDs fit the existing text
+`design_id`. Refresh recovery, retakes, stream cleanup, safe retries, plain-text
+messages, private role guards, signed gallery previews, and original downloads
+remain in place. Obsolete object URLs are revoked without clearing photos during
+Camera → Filter → Result.
+
+Focused tests cover the hybrid catalog, limits, active/direct-route checks,
+filters, all twelve built-in Original render combinations, filter-only-photo
+behavior, custom overlay order/dimensions, deterministic grain, cancellation,
+metadata/save identity, gallery labels/names, and cleanup. Run `npm test` and
+`npm run build` locally. Browser and real-account verification are separate;
+the [Phase 10 checklist](docs/phase-10-verification.md) records the required live
+checks without asserting they have run. No production deployment is included.
+
+Phase 10's main added modules are:
+
+```text
+src/data/photoboothDesigns.js
+src/data/photoboothFilters.js
+src/services/publicDesignService.js
+src/hooks/usePublicDesigns.js
+src/hooks/useSelectedBoothDesign.js
+src/components/CustomDesignPreview.jsx
+src/components/GeneratedPhotostripPreview.jsx
+src/components/MissingPhotos.jsx
+src/pages/FilterPage.jsx
+src/utils/frameGeometry.js
+src/utils/photoSessionSelection.js
+src/utils/photoboothFilterProcessing.js
+src/styles/filters.css
+tests/publicDesignService.test.js
+tests/photoboothFilters.test.js
+tests/photostripRenderer.test.js
+docs/phase-10-verification.md
+```
+
+Existing App routes, camera/design/result components, photo/output/save hooks,
+Canvas utilities, Admin upload count checks, gallery services/captions, and their
+focused tests were extended. No new package or environment variable is required.
 
 ## Future hosting
 

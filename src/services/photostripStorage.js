@@ -1,7 +1,8 @@
 import { getSupabaseClient } from '../lib/supabaseClient.js'
 import { runAuthOperation } from './authOperationLock.js'
 import { getPhotoboothFormat } from '../data/photoboothFormats.js'
-import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
+import { isCustomDesign, isCustomDesignPath, resolvePhotoboothDesign } from '../data/photoboothDesigns.js'
+import { getPhotoboothFilter } from '../data/photoboothFilters.js'
 
 const STAGE_TIMEOUT_MS = 15_000
 const CLEANUP_TIMEOUT_MS = 5_000
@@ -126,19 +127,24 @@ function createStorageId() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
-function validateResult({ blob, formatId, designId, width, height } = {}) {
+function validateResult({ blob, formatId, designId, design: designSnapshot, width, height, filterId = 'original' } = {}) {
   const format = getPhotoboothFormat(formatId)
+  // Custom IDs must arrive with the active, matching-format design resolved by
+  // the capture workflow. A UUID/query parameter by itself is insufficient.
+  const design = resolvePhotoboothDesign(designId, formatId, designSnapshot ? [designSnapshot] : [])
   if (!(blob instanceof Blob) || blob.type !== 'image/png' || blob.size === 0
-    || !format || !getPlaceholderDesign(designId, formatId)
+    || !format || !design || !getPhotoboothFilter(filterId)
+    || isCustomDesign(design) && !isCustomDesignPath(design.storagePath, formatId)
     || width !== format.canvasWidth || height !== format.canvasHeight) {
     throw new PhotostripSaveError('invalid-result', 'validation', 'The generated PNG or its validated format metadata is invalid.', false)
   }
+  return { filterId }
 }
 
 export async function savePhotostrip(result, { client = getSupabaseClient(), timeoutMs = STAGE_TIMEOUT_MS,
   cleanupTimeoutMs = CLEANUP_TIMEOUT_MS } = {}) {
   requireClient(client)
-  validateResult(result)
+  const { filterId } = validateResult(result)
   const session = await ensureGuestSession({ client, timeoutMs })
   const ownerId = session.user.id
   const storagePath = `${ownerId}/${createStorageId()}.png`
@@ -152,7 +158,7 @@ export async function savePhotostrip(result, { client = getSupabaseClient(), tim
   try {
     const insertion = client.from('photostrips').insert({
       owner_id: ownerId, storage_path: storagePath, format_id: result.formatId,
-      design_id: result.designId, width: result.width, height: result.height,
+      design_id: result.designId, width: result.width, height: result.height, filter_id: filterId,
     })
     const response = await withDeadline(insertion.abortSignal(controller.signal), 'metadata', timeoutMs, controller)
     if (response.error) throw safeFailure(response.error, 'metadata', response.status)

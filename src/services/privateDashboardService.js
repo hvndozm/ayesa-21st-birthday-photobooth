@@ -1,10 +1,11 @@
 import { getSupabaseClient } from '../lib/supabaseClient.js'
+import { isCustomDesignId } from '../data/photoboothDesigns.js'
 
 export const MESSAGE_PAGE_SIZE = 50
 export const GALLERY_PAGE_SIZE = 24
 export const PREVIEW_LIFETIME_SECONDS = 600
 const messageFields = 'id,nickname,message,is_read,created_at'
-const galleryFields = 'id,storage_path,format_id,design_id,width,height,created_at'
+const galleryFields = 'id,storage_path,format_id,design_id,filter_id,width,height,created_at'
 const safeCodes = new Set(['42501', '23505', '23503', '23514', '42P01', '42703', 'PGRST204', 'PGRST205', 'PGRST301', 'PGRST302', 'AccessDenied', 'Unauthorized', 'not_found'])
 
 export class PrivateDashboardError extends Error {
@@ -99,7 +100,41 @@ async function getPage(table, fields, pageSize, { offset = 0, filter = 'all', ..
 }
 
 export const getBirthdayMessages = (options) => getPage('birthday_messages', messageFields, MESSAGE_PAGE_SIZE, options)
-export const getPrivatePhotostrips = (options) => getPage('photostrips', galleryFields, GALLERY_PAGE_SIZE, options)
+
+// A page may contain many memories using the same custom frame. Resolve their
+// display names once as a batch, including inactive rows visible to this role.
+// No names are persisted beyond the protected gallery's in-memory page data.
+export async function getPrivateDesignNames(designIds, options = {}) {
+  const ids = [...new Set(designIds.filter(isCustomDesignId))]
+  if (!ids.length) return {}
+  const response = await request('SELECT design names', 'photostrip_designs', (client, signal) =>
+    client.from('photostrip_designs').select('id,name').in('id', ids).abortSignal(signal), options)
+  if (!Array.isArray(response.data)) throw new PrivateDashboardError('SELECT design names', 'photostrip_designs')
+  const requested = new Set(ids)
+  return Object.fromEntries(response.data.filter(row => requested.has(row?.id) && typeof row.name === 'string' && row.name.trim())
+    .map(row => [row.id, row.name.trim().slice(0, 80)]))
+}
+
+export async function getPrivatePhotostrips(options = {}) {
+  const page = await getPage('photostrips', galleryFields, GALLERY_PAGE_SIZE, options)
+  if (!page.items.some(item => isCustomDesignId(item.design_id))) return page
+  let names = {}
+  let designNamesError = null
+  try {
+    names = await getPrivateDesignNames(page.items.map(item => item.design_id), options)
+  } catch (error) {
+    // A missing/deleted/restricted template must never hide its already-flattened
+    // memory. Preserve only safe diagnostics; cancelled private work cannot win.
+    if (options.signal?.aborted) throw error
+    designNamesError = error
+  }
+  return {
+    ...page,
+    items: page.items.map(item => isCustomDesignId(item.design_id)
+      ? { ...item, customDesignName: names[item.design_id] ?? null } : item),
+    ...(designNamesError ? { designNamesError } : {}),
+  }
+}
 
 export async function markBirthdayMessageRead(messageId, options = {}) {
   if (!messageId) throw new PrivateDashboardError('UPDATE is_read', 'birthday_messages')

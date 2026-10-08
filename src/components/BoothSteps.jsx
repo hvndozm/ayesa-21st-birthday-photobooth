@@ -1,6 +1,6 @@
 import Icon from './Icon.jsx'
 
-const steps = ['Format', 'Design', 'Photos', 'Result']
+const steps = ['Format', 'Design', 'Photos', 'Filter', 'Result']
 
 export default function BoothSteps({ currentStep }) {
   return (

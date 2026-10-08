@@ -7,7 +7,8 @@ import CaptureComposition from '../components/CaptureComposition.jsx'
 import Icon from '../components/Icon.jsx'
 import useCamera from '../hooks/useCamera.js'
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
-import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
+import useSelectedBoothDesign from '../hooks/useSelectedBoothDesign.js'
+import ActionLink from '../components/ActionLink.jsx'
 import { captureMockFrame, captureVideoFrame } from '../utils/cameraCapture.js'
 import { createCaptureSearch } from '../utils/captureNavigation.js'
 import { createSelectionSearch } from '../utils/photoboothNavigation.js'
@@ -78,7 +79,8 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
 
   function savePhotos(nextPhotos) {
     photosRef.current = nextPhotos
-    savePhotoSession({ formatId: format.id, designId: design.id, mockMode, photos: nextPhotos })
+    const { overlayUrl: _previewUrl, ...snapshot } = design
+    savePhotoSession({ formatId: format.id, designId: design.id, mockMode, photos: nextPhotos, design: snapshot, filterId: 'original' })
   }
 
   async function openCamera() {
@@ -155,7 +157,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
     if (!allCaptured || busy.current) return
     cancelCapture()
     camera.stopCamera()
-    navigate(`/photobooth/result${createCaptureSearch(format.id, design.id, mockMode)}`)
+    navigate(`/photobooth/filter${createCaptureSearch(format.id, design.id, mockMode)}`)
   }
 
   const displayedError = captureError ?? camera.error
@@ -229,10 +231,24 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
 export default function CameraPage({ photoSession, savePhotoSession }) {
   const [searchParams] = useSearchParams()
   const format = getPhotoboothFormat(searchParams.get('format'))
-  const design = getPlaceholderDesign(searchParams.get('design'), format?.id)
+  const selected = useSelectedBoothDesign(format?.id, searchParams.get('design'), photoSession?.design)
   const mockMode = import.meta.env.DEV && searchParams.get('mockCamera') === 'true'
   if (!format) return <Navigate to="/photobooth" replace />
-  if (!design) return <Navigate to={`/photobooth/designs${createSelectionSearch(format.id)}`} replace />
+  if (selected.status === 'invalid') return <Navigate to={`/photobooth/designs${createSelectionSearch(format.id)}`} replace />
+  if (selected.status !== 'ready') return <BoothPageLayout currentStep={3} className="camera-page"
+    eyebrow="Your birthday frame" title={<>A little <em>birthday magic.</em></>}
+    description="A special frame for your four memories." backTo={`/photobooth/designs${createSelectionSearch(format.id)}`} backLabel="Choose Another Design">
+    <div className="result-state" role={selected.status === 'error' ? 'alert' : 'status'}>
+      <h2>{selected.status === 'loading' ? 'Getting your frame ready…' : selected.error?.code === 'design-unavailable'
+        ? 'This design is no longer available.' : 'We couldn’t load this birthday frame.'}</h2>
+      {selected.status === 'error' && <>
+        <p>Choose another design, or try loading it again.</p>
+        <button type="button" className="button button--secondary" onClick={selected.retry}>Retry Design</button>
+        <ActionLink to={`/photobooth/designs${createSelectionSearch(format.id)}`} icon="back">Choose Another Design</ActionLink>
+      </>}
+    </div>
+  </BoothPageLayout>
+  const design = selected.design
 
   return <CaptureSession key={`${format.id}:${design.id}:${mockMode}`}
     format={format} design={design} mockMode={mockMode}

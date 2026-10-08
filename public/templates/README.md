@@ -1,8 +1,9 @@
 # Photostrip template PNGs
 
-Phase 4 renders all four placeholder themes with native Canvas artwork. This
-folder does not need image files yet. Future designs can set `overlaySrc` to a
-local asset, for example `/templates/2x6/sweet-bow.png`.
+The four built-in themes render with their existing native Canvas artwork and
+CSS previews. This public folder needs no template images. Sweet Bow, Birthday
+Sparkle, Lavender Dream, and Love Letter must remain built-in designs; do not
+convert or migrate them to PNGs.
 
 Templates must be **PNG**, with these exact dimensions:
 
@@ -17,19 +18,19 @@ transparent and match the `frames` rectangles in
 `src/data/photoboothFormats.js`. Keep the window positions and sizes synchronized
 when changing the layout; the PNG does not determine the crop geometry.
 
-Use the existing design record's `overlaySrc` property. The renderer waits for
-the asset to decode, draws the photographs first, then draws the template at
-`(0, 0)` at the output dimensions. PNG alpha is preserved, so the photo windows
-show the captured images. Template artwork replaces the Canvas placeholder
-borders, motifs, and text; the selected background remains below the photos.
+Admin uploads live in the PRIVATE `template-designs` bucket and are previewed
+with 600-second signed URLs. Do not copy uploaded artwork into this public folder.
+Phase 10 combines all four built-ins with up to four active custom PNGs per format.
+PNG validation, format assignment, Enable/Disable, and confirmed deletion are
+available at `/admin/designs`; inactive custom rows also occupy a custom slot.
 
-Local Vite public assets use paths such as `/templates/4x6/lavender-dream.png`.
-Phase 9 Admin uploads instead live in the PRIVATE `template-designs` bucket and
-are previewed with temporary signed URLs. Do not copy private uploaded artwork
-into this public folder. PNG validation, format assignment, Enable/Disable, and
-confirmed deletion are available at `/admin/designs`; the public photobooth and
-Canvas renderer still use their existing local placeholder designs.
+Final rendering uses an original authenticated private download attached as
+`overlayBlob`, never a signed preview URL. The renderer draws locally filtered
+photographs first and the unfiltered full-resolution template last at `(0, 0)`.
+PNG alpha reveals the photos. Completed strips are flattened and independently
+stored in PRIVATE `photostrips`, so template deletion never deletes saved memories.
 
 See [Admin template artwork](../../docs/template-artwork.md) for the maximum
 10 MB size, exact dimensions, transparent photo windows, and all frame positions.
-Phase 10 will separately integrate saved templates into the public workflow.
+See the [Phase 10 verification checklist](../../docs/phase-10-verification.md)
+for the public custom-template and filter workflow.

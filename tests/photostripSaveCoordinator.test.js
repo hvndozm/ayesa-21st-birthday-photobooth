@@ -27,7 +27,8 @@ test('a definite failure retries only on a deliberate retry and uses the existin
   const png = result()
   const start = createPhotostripSaveCoordinator(async (payload) => {
     assert.equal(payload.blob, png.blob)
-    assert.deepEqual({ ...payload, blob: undefined }, { blob: undefined, formatId: '2x6', designId: '2x6-sweet-bow', width: 600, height: 1800 })
+    assert.deepEqual({ ...payload, blob: undefined }, { blob: undefined, formatId: '2x6', designId: '2x6-sweet-bow', design,
+      width: 600, height: 1800, filterId: 'original' })
     if (++count === 1) throw Object.assign(new Error('Fixture rejection'), { retryable: true })
   })
   const photos = [1, 2, 3, 4]
@@ -37,6 +38,39 @@ test('a definite failure retries only on a deliberate retry and uses the existin
   assert.equal(count, 1)
   assert.equal((await start(photos, png, format, design, true).promise).status, 'success')
   assert.equal(count, 2)
+})
+
+test('filter changes save distinct outputs and returning to a previously saved filter does not duplicate it', async () => {
+  const payloads = []
+  const start = createPhotostripSaveCoordinator(async payload => { payloads.push(payload) })
+  const photos = [1, 2, 3, 4]
+  const entries = new Map()
+  for (const filterId of ['original', 'blurry', 'digicam', 'polaroid', 'mono']) {
+    const output = { ...result(), filterId }
+    const first = start(photos, output, format, design)
+    assert.equal(start(photos, output, format, design), first)
+    await first.promise
+    entries.set(filterId, first)
+  }
+  assert.equal(payloads.length, 5)
+  assert.deepEqual(payloads.map(payload => payload.filterId), ['original', 'blurry', 'digicam', 'polaroid', 'mono'])
+  assert.equal(start(photos, { ...result(), filterId: 'mono' }, format, design, true), entries.get('mono'))
+  assert.equal(start(photos, result(), format, design), entries.get('original'))
+  assert.equal(payloads.length, 5)
+})
+
+test('custom design snapshots and exact filtered final Blobs reach storage without passing raw captures', async () => {
+  const custom = { id: '10000000-0000-4000-8000-000000000104', formatId: '2x6', source: 'custom', isActive: true,
+    storagePath: '2x6/10000000-0000-4000-8000-000000000105.png' }
+  const filtered = { ...result(), filterId: 'polaroid' }
+  let payload
+  const start = createPhotostripSaveCoordinator(async input => { payload = input })
+  await start([{ blob: new Blob(['raw frame']) }, 2, 3, 4], filtered, format, custom).promise
+  assert.equal(payload.design, custom)
+  assert.equal(payload.designId, custom.id)
+  assert.equal(payload.filterId, 'polaroid')
+  assert.equal(payload.blob, filtered.blob)
+  assert.equal('photos' in payload, false)
 })
 
 test('uncertain writes cannot be retried blindly and new photo sets save independently', async () => {

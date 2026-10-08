@@ -38,7 +38,7 @@ export default function AdminDesignsPage() {
       <button type="button" className="button button--primary admin-new-design" onClick={() => setUploadOpen(true)}><Icon name="sparkle" />Upload New Design</button>
       <button type="button" className="birthday-small-button" onClick={() => { designs.retry(); counts.retry() }}>Refresh designs</button>
     </div>
-    <p className="admin-phase-note">Custom templates stay in Admin preview for now. The guest photobooth keeps its current designs.</p>
+    <p className="admin-phase-note">Active custom templates appear alongside the four built-in designs. Each format has four custom slots, including inactive designs.</p>
     {notice && <p className="admin-design-notice" role="status">{notice}</p>}
     {designs.status !== 'ready' ? <PrivateDataState status={designs.status} onRetry={designs.retry} />
       : !designs.data.items.length ? <div className="birthday-data-state">

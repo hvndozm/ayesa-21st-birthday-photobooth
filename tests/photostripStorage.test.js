@@ -3,6 +3,7 @@ import test from 'node:test'
 import { createBoundedFetch, getSupabaseClient, isSupabaseConfigurationValid } from '../src/lib/supabaseClient.js'
 import { ensureGuestSession, PhotostripSaveError, savePhotostrip } from '../src/services/photostripStorage.js'
 import { photoboothFormats } from '../src/data/photoboothFormats.js'
+import { photoboothFilters } from '../src/data/photoboothFilters.js'
 
 const userId = '10000000-0000-4000-8000-000000000001'
 const guestSession = { user: { id: userId, is_anonymous: true } }
@@ -158,7 +159,59 @@ test('each format uploads its exact existing PNG Blob once and inserts only its 
     assert.match(saved.storagePath, new RegExp(`^${userId}/[0-9a-f-]{36}\\.png$`))
     assert.equal(saved.ownerId, userId)
     assert.deepEqual(calls.inserts[0], { owner_id: userId, storage_path: saved.storagePath,
-      format_id: format.id, design_id: result.designId, width: format.canvasWidth, height: format.canvasHeight })
+      format_id: format.id, design_id: result.designId, width: format.canvasWidth, height: format.canvasHeight, filter_id: 'original' })
+  }
+})
+
+test('all five filters save their selected metadata while uploading only the final flattened PNG', async () => {
+  for (const filter of photoboothFilters) {
+    const { client, calls } = fakeClient()
+    const result = { ...finalResult(), filterId: filter.id }
+    await savePhotostrip(result, { client })
+    assert.equal(calls.inserts[0].filter_id, filter.id)
+    assert.equal(calls.uploads.length, 1)
+    assert.equal(calls.uploads[0].blob, result.blob)
+    assert.equal(calls.inserts[0].blob, undefined)
+    assert.equal(calls.inserts[0].photos, undefined)
+    assert.equal(calls.inserts[0].design, undefined)
+  }
+})
+
+test('validated custom snapshots save stable UUID IDs in all formats without uploading template artwork', async () => {
+  const designId = '10000000-0000-4000-8000-000000000104'
+  const overlayBlob = new Blob(['custom artwork stand-in'], { type: 'image/png' })
+  for (const format of photoboothFormats) {
+    const { client, calls } = fakeClient()
+    const design = { id: designId, formatId: format.id, name: 'Custom birthday ribbons', source: 'custom',
+      storagePath: `${format.id}/10000000-0000-4000-8000-000000000105.png`, isActive: true, overlayBlob }
+    const result = { ...finalResult(format), designId, design, filterId: 'mono' }
+    await savePhotostrip(result, { client })
+    assert.equal(calls.inserts[0].design_id, designId)
+    assert.equal(calls.inserts[0].filter_id, 'mono')
+    assert.equal(calls.uploads.length, 1)
+    assert.equal(calls.uploads[0].blob, result.blob)
+    assert.notEqual(calls.uploads[0].blob, overlayBlob)
+    assert.equal('storagePath' in calls.inserts[0], false)
+    assert.equal('overlayBlob' in calls.inserts[0], false)
+    assert.equal('design' in calls.inserts[0], false)
+  }
+})
+
+test('unknown filters and unvalidated/inactive/incompatible custom UUIDs fail before authentication or Storage', async () => {
+  const designId = '10000000-0000-4000-8000-000000000104'
+  const custom = { id: designId, formatId: '2x6', source: 'custom', isActive: true,
+    storagePath: '2x6/10000000-0000-4000-8000-000000000105.png' }
+  const result = { ...finalResult(), designId, design: custom }
+  for (const invalid of [{ ...finalResult(), filterId: 'sepia' }, { ...finalResult(), filterId: null },
+    { ...result, design: undefined }, { ...result, design: { ...custom, isActive: false } },
+    { ...result, design: { ...custom, formatId: '6x4' } }, { ...result, design: { ...custom, source: 'builtin' } },
+    { ...result, design: { ...custom, storagePath: '2x6/../secret.png' } },
+    { ...result, design: { ...custom, id: '10000000-0000-4000-8000-000000000106' } }]) {
+    const { client, calls } = fakeClient()
+    await assert.rejects(savePhotostrip(invalid, { client }), error => error.code === 'invalid-result' && !error.retryable)
+    assert.equal(calls.sessions, 0)
+    assert.deepEqual(calls.uploads, [])
+    assert.deepEqual(calls.inserts, [])
   }
 })
 

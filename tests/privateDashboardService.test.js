@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
 import { getBirthdayMessageCounts, getPhotostripCount, getBirthdayMessages, getPrivatePhotostrips,
-  markBirthdayMessageRead, getPrivatePreviews, downloadPrivatePhotostrip, PrivateDashboardError, privateDataRequest } from '../src/services/privateDashboardService.js'
+  markBirthdayMessageRead, getPrivatePreviews, downloadPrivatePhotostrip, PrivateDashboardError, privateDataRequest, getPrivateDesignNames } from '../src/services/privateDashboardService.js'
 import { applyReadToPage, formatBirthdayDate, resolveMemoryLabels, memoryDownloadName } from '../src/utils/birthdayDashboard.js'
 import { getProtectedAccess } from '../src/auth/authAccess.js'
 
@@ -13,7 +13,7 @@ function fixture(respond = () => ({ data: [], count: 0, error: null })) {
       const call = { table, steps: [] }
       calls.push(call)
       const query = {}
-      for (const method of ['select', 'eq', 'order', 'range', 'update', 'maybeSingle']) {
+      for (const method of ['select', 'eq', 'in', 'order', 'range', 'update', 'maybeSingle']) {
         query[method] = (...args) => { call.steps.push([method, ...args]); return query }
       }
       query.abortSignal = signal => { call.signal = signal; return respond(call) }
@@ -116,7 +116,7 @@ test('gallery metadata selects only needed fields and paginates 24 newest-first'
   const { client, calls } = fixture(() => ({ data: [memory], count: 25 }))
   const page = await getPrivatePhotostrips({ client, offset: 24 })
   assert.equal(page.hasMore, false)
-  assert.deepEqual(calls[0].steps[0], ['select', 'id,storage_path,format_id,design_id,width,height,created_at', { count: 'exact' }])
+  assert.deepEqual(calls[0].steps[0], ['select', 'id,storage_path,format_id,design_id,filter_id,width,height,created_at', { count: 'exact' }])
   assert.deepEqual(calls[0].steps.at(-1), ['range', 24, 47])
 })
 
@@ -195,6 +195,81 @@ test('central labels preserve all three output proportions and have friendly unk
   assert.equal(memoryDownloadName(unknown).includes('private-id'), false)
   assert.equal(formatBirthdayDate('invalid'), 'A birthday moment')
   assert.equal(typeof formatBirthdayDate(memory.created_at, true), 'string')
+})
+
+test('gallery labels display the chosen filter and preserve Original for historical rows', () => {
+  for (const [filter_id, filterName] of [['original', 'Original'], ['blurry', 'Blurry'], ['digicam', 'Digicam'], ['polaroid', 'Polaroid'], ['mono', 'Mono']]) {
+    const labels = resolveMemoryLabels({ ...memory, filter_id })
+    assert.equal(labels.filterName, filterName)
+    assert.equal(labels.designName, 'Sweet Bow')
+  }
+  assert.equal(resolveMemoryLabels(memory).filterName, 'Original')
+  assert.equal(resolveMemoryLabels({ ...memory, filter_id: 'unknown' }).filterName, 'Original')
+})
+
+test('custom names are resolved in one deduplicated authorized metadata batch without active filtering', async () => {
+  const firstId = '30000000-0000-4000-8000-000000000001'
+  const secondId = '30000000-0000-4000-8000-000000000002'
+  const items = [
+    { ...memory, id: 'first', design_id: firstId, filter_id: 'mono' },
+    { ...memory, id: 'second', design_id: firstId, filter_id: 'digicam' },
+    { ...memory, id: 'third', design_id: secondId }, memory,
+  ]
+  const { client, calls } = fixture(call => call.table === 'photostrips'
+    ? { data: items, count: 4 }
+    : { data: [{ id: firstId, name: '  Moonlight ribbon  ' }, { id: secondId, name: 'Disabled but remembered' },
+      { id: 'unrequested-row', name: 'Do not include' }] })
+  const page = await getPrivatePhotostrips({ client })
+  assert.equal(calls.length, 2)
+  assert.deepEqual(calls[1].steps, [['select', 'id,name'], ['in', 'id', [firstId, secondId]]])
+  assert.equal(page.items[0].customDesignName, 'Moonlight ribbon')
+  assert.equal(page.items[1].customDesignName, 'Moonlight ribbon')
+  assert.equal(page.items[2].customDesignName, 'Disabled but remembered')
+  assert.equal(resolveMemoryLabels(page.items[0]).designName, 'Moonlight ribbon')
+  assert.equal(resolveMemoryLabels(page.items[0]).filterName, 'Mono')
+  assert.equal(page.items[3], memory)
+  assert.equal(items[0].customDesignName, undefined, 'database rows are not mutated')
+})
+
+test('deleted or restricted custom names retain readable historical photostrips with a friendly fallback', async () => {
+  const custom = { ...memory, design_id: '30000000-0000-4000-8000-000000000001', filter_id: 'polaroid' }
+  for (const metadata of [{ data: [] }, { error: { code: '42501', status: 403, message: 'PRIVATE TEMPLATE DETAILS' } }]) {
+    const { client } = fixture(call => call.table === 'photostrips' ? { data: [custom], count: 1 } : metadata)
+    const page = await getPrivatePhotostrips({ client })
+    assert.equal(page.items.length, 1)
+    assert.equal(resolveMemoryLabels(page.items[0]).designName, 'Custom Birthday Design')
+    assert.equal(resolveMemoryLabels(page.items[0]).filterName, 'Polaroid')
+    assert.equal(page.items[0].storage_path, memory.storage_path)
+    assert.equal(JSON.stringify(page.designNamesError ?? null).includes('PRIVATE TEMPLATE DETAILS'), false)
+    if (metadata.error) assert.equal(page.designNamesError.code, '42501')
+  }
+})
+
+test('built-in-only pages do not request custom metadata and custom text stays plain React text', async () => {
+  const { client, calls } = fixture(() => ({ data: [memory], count: 1 }))
+  await getPrivatePhotostrips({ client })
+  assert.equal(calls.length, 1)
+  assert.deepEqual(await getPrivateDesignNames(['2x6-sweet-bow', 'invalid-id'], { client }), {})
+  assert.equal(calls.length, 1)
+  const id = '30000000-0000-4000-8000-000000000001'
+  const { client: namesClient } = fixture(() => ({ data: [{ id, name: '<script>alert(1)</script>' }] }))
+  const names = await getPrivateDesignNames([id], { client: namesClient })
+  assert.equal(names[id], '<script>alert(1)</script>')
+  const source = await readFile(new URL('../src/components/PrivatePhotostripGallery.jsx', import.meta.url), 'utf8')
+  assert.equal(source.includes('dangerouslySetInnerHTML'), false)
+})
+
+test('session cancellation during custom name loading cannot return a successful private page', async () => {
+  const custom = { ...memory, design_id: '30000000-0000-4000-8000-000000000001' }
+  const { client, calls } = fixture(call => call.table === 'photostrips'
+    ? { data: [custom], count: 1 } : new Promise(() => {}))
+  const controller = new AbortController()
+  const pending = getPrivatePhotostrips({ client, signal: controller.signal })
+  await new Promise(resolve => setTimeout(resolve, 1))
+  controller.abort()
+  await assert.rejects(pending, PrivateDashboardError)
+  assert.equal(calls.length, 2)
+  assert.equal(calls[1].signal.aborted, true)
 })
 
 test('all Ayesa routes share the strict role guard: anonymous/session loss redirects and Admin goes to Admin', async () => {

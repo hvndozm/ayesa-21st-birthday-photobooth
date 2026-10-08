@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
-import { getTemplateDesignCounts, getTemplateDesigns, uploadTemplateDesign, setTemplateDesignActive, deleteTemplateDesign } from '../src/services/templateDesignService.js'
+import { getTemplateDesignCounts, getTemplateDesigns, getCustomDesignCount, uploadTemplateDesign, setTemplateDesignActive, deleteTemplateDesign } from '../src/services/templateDesignService.js'
 import { validateTemplatePng, validateTemplateFileBasics, validateTemplateName, templateSlug, MAX_TEMPLATE_BYTES, TemplateValidationError } from '../src/utils/templateValidation.js'
 import { createTemplatePreview, templateErrorMessage } from '../src/utils/templateManagement.js'
 import { getPrivatePreviews } from '../src/services/privateDashboardService.js'
@@ -120,6 +120,45 @@ test('template summary counts use exact HEAD queries, including active-only', as
   assert.deepEqual(calls[1].steps[1], ['eq', 'is_active', true])
 })
 
+test('custom slot count uses selected-format HEAD count and includes inactive designs', async () => {
+  const { client, calls } = fixture({ query: () => ({ count: 4 }) })
+  assert.equal(await getCustomDesignCount('2x6', { client }), 4)
+  assert.deepEqual(calls[0].steps, [['select', 'id', { count: 'exact', head: true }], ['eq', 'format_id', '2x6']])
+  assert.equal(calls[0].steps.some(step => step[0] === 'eq' && step[1] === 'is_active'), false)
+  const invalid = fixture({ query: () => ({ count: null }) })
+  await assert.rejects(getCustomDesignCount('2x6', { client: invalid.client }), error => error.code === 'count-check-failed')
+})
+
+test('a fifth custom design is blocked before any Storage upload, including inactive occupied slots', async () => {
+  for (const occupiedSlots of [4, 5]) {
+    const { client, calls } = fixture({ query: () => ({ count: occupiedSlots }) })
+    await assert.rejects(uploadTemplateDesign(uploadInput, { client, validation }), error => {
+      assert.equal(error.code, 'custom-limit-reached')
+      assert.match(templateErrorMessage(error), /already have 4 custom designs/)
+      return true
+    })
+    assert.equal(calls.some(call => call.bucket || call.steps?.some(step => step[0] === 'insert')), false)
+  }
+})
+
+test('deleting a custom template frees its slot without changing built-ins or finished photostrips', async () => {
+  let occupiedSlots = 4
+  const { client, calls } = fixture({ query: call => {
+    if (call.steps.some(step => step[0] === 'delete')) { occupiedSlots--; return { data: { id: designId } } }
+    if (call.steps.some(step => step[0] === 'insert')) { occupiedSlots++; return { status: 201 } }
+    if (call.steps.some(step => step[0] === 'maybeSingle')) return { data: design }
+    if (call.steps.some(step => step[0] === 'eq' && step[1] === 'slug')) return { count: 0 }
+    return { count: occupiedSlots }
+  } })
+  await assert.rejects(uploadTemplateDesign(uploadInput, { client, validation }), error => error.code === 'custom-limit-reached')
+  await deleteTemplateDesign(designId, { client, confirmed: true })
+  assert.equal(await getCustomDesignCount('2x6', { client }), 3)
+  await uploadTemplateDesign(uploadInput, { client, validation })
+  assert.equal(occupiedSlots, 4)
+  assert.equal(calls.filter(call => call.operation === 'upload').length, 1)
+  assert.equal(calls.some(call => call.table === 'photostrips'), false)
+})
+
 test('template list reads only needed columns, orders newest first, and paginates 24', async () => {
   const { client, calls } = fixture({ query: () => ({ data: [design], count: 25 }) })
   const page = await getTemplateDesigns({ client })
@@ -147,7 +186,7 @@ test('duplicate slug in the same format stops before upload without overwriting'
   const { client, calls } = fixture({ query: () => ({ count: 1 }) })
   await assert.rejects(uploadTemplateDesign(uploadInput, { client, validation }), error => error.code === 'duplicate-name')
   assert.equal(calls.some(call => call.operation === 'upload'), false)
-  const duplicate = calls.find(call => call.table === 'photostrip_designs')
+  const duplicate = calls.find(call => call.steps?.some(step => step[0] === 'eq' && step[1] === 'slug'))
   assert.deepEqual(duplicate.steps.slice(1), [['eq', 'format_id', '2x6'], ['eq', 'slug', 'sweet-bow']])
 })
 

@@ -32,7 +32,10 @@ npm run lint        # Run the existing Oxlint checks
 - `/photobooth/result`: full-resolution Canvas photostrip preview and PNG download.
 - `/messages`: private birthday-message submission, with nickname and letter.
 - `/ayesa/login` and `/admin/login`: private email/password entrances.
-- `/ayesa` and `/admin`: role-protected dashboard placeholders.
+- `/ayesa`: Ayesa's private overview with live letter/unread/memory counts.
+- `/ayesa/messages`: private letter inbox, read status, and All/Unread/Read filters.
+- `/ayesa/gallery`: private birthday album, larger previews, and original PNG downloads.
+- `/admin`: the role-protected Phase 7 placeholder.
 - Unknown paths show a friendly page with a link home.
 
 The welcome dialog appears on the first homepage visit in each app load. It can
@@ -289,8 +292,8 @@ See the setup document for the INSERT-only table policy and manual row checks.
 
 Ayesa/Admin accounts and their matching `public.profiles` rows are created
 manually in Supabase. There is no public registration or login link in the
-birthday navigation. Use the private URLs above directly. The dashboards show
-future-feature cards only; they do not read letters or photostrips.
+birthday navigation. Use the private URLs above directly. Phase 8 extends only
+Ayesa's area; Admin still shows future-feature cards.
 
 `AuthProvider` shares a small in-memory controller through React context. It
 resolves the existing SDK session on initialization, observes auth changes, and
@@ -326,8 +329,8 @@ public save/send operation when no session exists.
 React route guards protect navigation only. Database/Storage RLS remains the
 security boundary, as described in the
 [Supabase RLS guide](https://supabase.com/docs/guides/database/postgres/row-level-security).
-No profile write, role selector, privileged key, or new gallery/message read
-policy is added. See the setup document for own-profile permission requirements
+No profile write, role selector, privileged key, or database/Storage policy
+is added. See the setup document for own-profile permission requirements
 and the manual checks for the two real private accounts.
 
 ## Structure
@@ -355,10 +358,96 @@ Custom birthday images can replace the three labeled homepage placeholders
 later; see `src/assets/README.md`. All current decorations are original CSS shapes
 and simple line icons, with no copyrighted character artwork or external assets.
 
-Template uploads and dashboard galleries/inboxes/management are reserved for
-later phases. Private login and protected placeholder dashboards are available.
+Template uploads and Admin management remain reserved for later phases.
+Ayesa's private inbox and gallery are available behind the existing role guard.
 Four source frames remain local; only the finished
 PNG gets a private gallery copy. The guest can also save it using Download PNG.
+
+## Phase 8 — Ayesa's birthday corner
+
+All three Ayesa routes share the existing `ProtectedRoute` and a nested layout
+with Overview/Letters/Gallery navigation and Logout. Admin is redirected to
+`/admin`; guests go to `/ayesa/login`. Private pages are lazy-loaded. No new
+authentication system or dependency is introduced.
+
+`privateDashboardService.js` owns private queries. The overview uses three
+exact HEAD counts (all messages, unread messages, photostrips), without loading
+letters, gallery metadata, or images. Each card can fail/retry independently.
+Counts stay in the route-scoped layout and update locally when a letter is read.
+
+The inbox fetches only `id,nickname,message,is_read,created_at`, newest first,
+50 at a time. All/Unread/Read filters query the whole corresponding collection;
+Load More applies the same filter. Nicknames and letters render as plain React
+text. Cards show short previews; opening a letter displays the complete text in
+a native stationery dialog. An unread letter updates only `is_read: true` for
+its ID. Returned `id,is_read` confirms the write; zero matched rows are a failure.
+Success removes the badge, decreases the shared unread count, and removes the
+letter from Unread without skipping the next pagination row. Failure leaves the
+letter readable and unread, with a small Retry read status action.
+
+The gallery fetches only needed metadata, 24 at a time. Batched
+[`createSignedUrls`](https://supabase.com/docs/reference/javascript/storage-from-createsignedurls)
+previews last 600 seconds, renew before expiry and when the tab becomes visible,
+and remain in memory only. Missing previews have individual reload controls.
+Images retain their original proportions through `object-fit: contain`;
+format/design names come from the existing shared configuration.
+
+The detail dialog's Download PNG uses authenticated
+[`download`](https://supabase.com/docs/reference/javascript/storage-from-download)
+from the private `photostrips` bucket. It downloads the original Blob without a
+resize or UI capture, uses a friendly date/format filename, and releases temporary
+object URLs. Download errors keep the dialog open with Retry Download PNG.
+
+Native dialogs make the background inert, contain keyboard focus, close with
+Escape, and restore focus. Read status has visible text, images have descriptive
+alt text, and animation respects reduced motion. Requests are bounded; page
+cleanup aborts/discards late responses. Session loss unmounts private content,
+and an identity switch remounts the corner with fresh state.
+
+`npm test` includes count, query/filter/pagination, confirmed read updates,
+local read-state/offset, private signed preview, original download/error/timeout,
+aspect-ratio label, cancellation, and role-guard checks. Real Supabase private
+reads, persisted updates, original downloads, and deployed RLS/bucket settings
+still require the real-account checklist in
+[Supabase setup and verification](docs/supabase-setup.md#phase-8-private-dashboard-verification).
+
+Phase 8 added these files:
+
+```text
+src/pages/AyesaDashboardLayout.jsx
+src/pages/AyesaOverviewPage.jsx
+src/pages/AyesaMessagesPage.jsx
+src/pages/AyesaGalleryPage.jsx
+src/components/BirthdayDialog.jsx
+src/components/BirthdayLetterDialog.jsx
+src/components/BirthdayMemoryDialog.jsx
+src/components/PrivateDataState.jsx
+src/components/PrivateMemoryPreview.jsx
+src/hooks/usePrivateResource.js
+src/hooks/usePrivateCollection.js
+src/hooks/usePrivatePreviews.js
+src/services/privateDashboardService.js
+src/utils/birthdayDashboard.js
+src/styles/birthday-dashboard.css
+tests/privateDashboardService.test.js
+```
+
+Modified files: `src/App.jsx`, this README, and `docs/supabase-setup.md`.
+The existing auth/controller/client, guest services, camera, Canvas, and Admin
+placeholder implementation remain unchanged. No package or environment change
+was needed.
+
+Phase 8 verification: 88 Node tests pass and the production build passes.
+Headless Chrome checks used simulated private sessions/API responses to exercise
+counts, pagination, filters, full letters/read updates and retries, preview
+failures/renewal, mixed aspect ratios, an original 600×1800 PNG download/retry,
+empty/error states, logout/session loss, keyboard focus, and reduced motion at
+320/375/390/430/768/1280 pixels. No browser console errors were observed. Live
+anonymous guest smoke checks successfully saved/downloaded a final strip and
+submitted one message without duplicate requests. Mock retakes preserved the
+other frames; the native camera path was checked with a simulated media device
+and stopped its tracks on navigation. Real private-account/RLS/bucket verification
+remains manual; these checks do not certify the deployed Supabase policies.
 
 ## Future hosting
 

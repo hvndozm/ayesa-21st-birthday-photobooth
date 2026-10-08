@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import SiteLayout from './components/SiteLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
@@ -12,11 +12,18 @@ import NotFoundPage from './pages/NotFoundPage.jsx'
 import PrivateLogin from './components/PrivateLogin.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import PrivateDashboardPage from './pages/PrivateDashboardPage.jsx'
+import PrivateAccessState from './components/PrivateAccessState.jsx'
 import './styles/site.css'
 import './styles/photobooth.css'
 import './styles/camera.css'
 import './styles/result.css'
 import './styles/auth.css'
+import './styles/birthday-dashboard.css'
+
+const AyesaDashboardLayout = lazy(() => import('./pages/AyesaDashboardLayout.jsx'))
+const AyesaOverviewPage = lazy(() => import('./pages/AyesaOverviewPage.jsx'))
+const AyesaMessagesPage = lazy(() => import('./pages/AyesaMessagesPage.jsx'))
+const AyesaGalleryPage = lazy(() => import('./pages/AyesaGalleryPage.jsx'))
 
 const pageTitles = {
   '/': "Ayesa's 21st Birthday Photobooth",
@@ -28,6 +35,8 @@ const pageTitles = {
   '/ayesa/login': "Ayesa's private entrance · Ayesa's 21st Birthday",
   '/admin/login': "Admin entrance · Ayesa's 21st Birthday",
   '/ayesa': "Ayesa's little corner · Ayesa's 21st Birthday",
+  '/ayesa/messages': "Your birthday letters · Ayesa's 21st Birthday",
+  '/ayesa/gallery': "Your birthday memories · Ayesa's 21st Birthday",
   '/admin': "Birthday admin · Ayesa's 21st Birthday",
 }
 
@@ -75,7 +84,13 @@ export default function App() {
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/ayesa/login" element={<PrivateLogin area="ayesa" />} />
           <Route path="/admin/login" element={<PrivateLogin area="admin" />} />
-          <Route path="/ayesa" element={<ProtectedRoute role="ayesa"><PrivateDashboardPage area="ayesa" /></ProtectedRoute>} />
+          <Route path="/ayesa" element={<ProtectedRoute role="ayesa">
+            <Suspense fallback={<PrivateAccessState loading area="ayesa" />}><AyesaDashboardLayout /></Suspense>
+          </ProtectedRoute>}>
+            <Route index element={<AyesaOverviewPage />} />
+            <Route path="messages" element={<AyesaMessagesPage />} />
+            <Route path="gallery" element={<AyesaGalleryPage />} />
+          </Route>
           <Route path="/admin" element={<ProtectedRoute role="admin"><PrivateDashboardPage area="admin" /></ProtectedRoute>} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

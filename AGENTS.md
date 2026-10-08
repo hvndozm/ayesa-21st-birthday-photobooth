@@ -211,3 +211,91 @@ Later milestones will separately implement:
 - Ayesa dashboard
 - Admin dashboard
 - Deployment
+
+## Phase 10 Design and Filter Architecture
+
+### Built-in Designs
+
+The existing four built-in designs must remain permanently supported:
+
+- Sweet Bow
+- Birthday Sparkle
+- Lavender Dream
+- Love Letter
+
+Do not remove, replace, upload, or migrate these built-in designs to Supabase.
+
+They continue using the existing local configuration, capture-preview styling, and Canvas rendering system.
+
+### Custom Designs
+
+Admin-uploaded transparent PNG designs are an additional design source.
+
+The public design catalog is:
+
+Built-in designs
++
+Active custom Supabase designs
+
+Custom designs use:
+
+- public.photostrip_designs
+- private template-designs Storage bucket
+
+Support up to 4 custom designs per photobooth format.
+
+Therefore each format may contain:
+
+- 4 built-in designs
+- up to 4 custom designs
+
+for up to 8 selectable designs per format.
+
+A custom design is format-specific.
+
+Required custom PNG dimensions:
+
+- 2x6: 600 x 1800 px
+- 6x4: 1800 x 1200 px
+- 4x6: 1200 x 1800 px
+
+The photo windows in uploaded templates must be transparent and align exactly with the centralized frame coordinates.
+
+### Filter Step
+
+The photobooth workflow now includes a Filter step after capturing all four photographs and before the final Result.
+
+Updated workflow:
+
+Home
+→ Format
+→ Design
+→ Camera
+→ Capture 4 Photos
+→ Filter
+→ Result
+→ Download PNG
+
+Available filters:
+
+- original
+- blurry
+- digicam
+- polaroid
+- mono
+
+The user selects ONE filter for the entire photostrip.
+
+The selected filter applies to all four photographs consistently.
+
+The filter must NOT alter the photostrip template artwork or decorative overlay.
+
+The Filter page must show an accurate preview of the final photostrip before the user proceeds to Result.
+
+The final Result must visually match the selected Filter preview.
+
+Filter processing must use browser-side Canvas and must not upload raw photographs or send images to an external image-processing service.
+
+### Current Milestone
+
+Phase 10 — Hybrid built-in/custom templates, real PNG overlays, and photostrip filters.

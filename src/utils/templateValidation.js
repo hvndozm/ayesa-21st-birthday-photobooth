@@ -7,6 +7,11 @@ export class TemplateValidationError extends Error {
   constructor(field, message) { super(message); this.name = 'TemplateValidationError'; this.field = field }
 }
 
+export function templateFileErrorMessage(error) {
+  return error instanceof TemplateValidationError ? error.message
+    : 'We couldn’t check this PNG. Please choose it again.'
+}
+
 export function templateSlug(name) {
   return name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/g, '') || 'birthday-design'

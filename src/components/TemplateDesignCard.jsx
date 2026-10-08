@@ -28,7 +28,7 @@ export default function TemplateDesignCard({ design, preview, onPreviewError, on
   }
   return <li className="admin-design-card">
     <button type="button" className="admin-design-open" onClick={() => onOpen(design)} aria-label={`Preview ${design.name} template`}>
-      <TemplatePreview design={design} preview={preview} onError={onPreviewError} />
+      <TemplatePreview design={design} preview={preview} onError={onPreviewError} loading="lazy" />
       <span className="admin-design-caption"><strong>{design.name}</strong><span>{labels.formatName} · {labels.dimensions}</span></span>
     </button>
     <div className="admin-design-meta"><span className={`admin-design-badge${design.is_active ? ' admin-design-badge--active' : ''}`}>{design.is_active ? 'Active' : 'Inactive'}</span>

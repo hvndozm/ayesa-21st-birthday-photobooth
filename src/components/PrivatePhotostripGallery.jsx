@@ -30,7 +30,7 @@ export default function PrivatePhotostripGallery({ titleId = 'birthday-gallery-t
               return <li key={memory.id} className="birthday-memory-card">
                 <button type="button" className="birthday-memory-open" onClick={() => setOpened(memory)}
                   aria-label={`Open ${labels.designName}, ${labels.formatName}, ${labels.filterName} filter, ${formatBirthdayDate(memory.created_at)}`}>
-                  <span className="birthday-memory-image"><PrivateMemoryPreview memory={memory} preview={previews[memory.id]} onError={unavailable} /></span>
+                  <span className="birthday-memory-image"><PrivateMemoryPreview memory={memory} preview={previews[memory.id]} onError={unavailable} loading="lazy" /></span>
                   <span className="birthday-memory-caption"><strong>{labels.designName}</strong><span>{labels.formatName}</span>
                     <span>{labels.dimensions} · {labels.filterName}</span><time dateTime={memory.created_at}>{formatBirthdayDate(memory.created_at)}</time></span>
                 </button>

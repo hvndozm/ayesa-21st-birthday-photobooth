@@ -4,11 +4,18 @@ import { BrowserRouter } from 'react-router-dom'
 import './styles/global.css'
 import App from './App.jsx'
 import AuthProvider from './auth/AuthProvider.jsx'
+import ApplicationErrorBoundary from './components/ApplicationErrorBoundary.jsx'
 
-createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById('root'), {
+  // React's default caught-error logger may include raw error details. Keep
+  // unexpected failures private while the boundary offers visible recovery.
+  onCaughtError: () => {},
+}).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider><App /></AuthProvider>
+      <ApplicationErrorBoundary>
+        <AuthProvider><App /></AuthProvider>
+      </ApplicationErrorBoundary>
     </BrowserRouter>
   </StrictMode>,
 )

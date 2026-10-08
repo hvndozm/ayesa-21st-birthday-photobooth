@@ -9,6 +9,7 @@ import { photoboothFilters, getPhotoboothFilter } from '../data/photoboothFilter
 import { getSessionDesign, hasFourPhotos } from '../utils/photoSessionSelection.js'
 import { createCaptureSearch } from '../utils/captureNavigation.js'
 import { createSelectionSearch } from '../utils/photoboothNavigation.js'
+import { isDevelopmentMockCamera } from '../utils/mockCameraMode.js'
 
 export default function FilterPage({ photoSession, savePhotoSession, output }) {
   const [searchParams] = useSearchParams()
@@ -16,7 +17,7 @@ export default function FilterPage({ photoSession, savePhotoSession, output }) {
   const [seenPreview, setSeenPreview] = useState(null)
   const format = getPhotoboothFormat(searchParams.get('format'))
   const design = getSessionDesign(photoSession, format?.id, searchParams.get('design'))
-  const mockMode = import.meta.env.DEV && searchParams.get('mockCamera') === 'true'
+  const mockMode = isDevelopmentMockCamera(searchParams)
   if (!format) return <Navigate to="/photobooth" replace />
   if (!design) return <Navigate to={`/photobooth/designs${createSelectionSearch(format.id)}`} replace />
   if (!hasFourPhotos(photoSession, format.id, design.id, mockMode)) return <MissingPhotos format={format} design={design} mockMode={mockMode} />

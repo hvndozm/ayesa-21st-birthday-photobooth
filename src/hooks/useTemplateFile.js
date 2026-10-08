@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { validateTemplatePng } from '../utils/templateValidation.js'
+import { validateTemplatePng, templateFileErrorMessage } from '../utils/templateValidation.js'
 import { createTemplatePreview } from '../utils/templateManagement.js'
 
 export default function useTemplateFile(file, formatId) {
@@ -17,7 +17,7 @@ export default function useTemplateFile(file, formatId) {
         preview = createTemplatePreview(file)
         setState({ file, formatId, status: 'ready', url: preview.url, ...dimensions })
       } catch (error) {
-        if (active) setState({ file, formatId, status: 'error', error: error.message })
+        if (active) setState({ file, formatId, status: 'error', error: templateFileErrorMessage(error) })
       }
     }
     queueMicrotask(validate)

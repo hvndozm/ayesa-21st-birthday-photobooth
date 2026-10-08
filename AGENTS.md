@@ -299,3 +299,16 @@ Filter processing must use browser-side Canvas and must not upload raw photograp
 ### Current Milestone
 
 Phase 10 — Hybrid built-in/custom templates, real PNG overlays, and photostrip filters.
+
+## Current Milestone
+
+Phase 11 — Production readiness, deployment, security review,
+real-device testing, and final launch.
+
+Do not introduce major new features during this phase unless
+required to fix a production-blocking bug.
+
+Production hosting:
+- Frontend: Vercel
+- Repository: GitHub
+- Backend/Auth/Database/Storage: Supabase

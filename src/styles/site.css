@@ -348,3 +348,8 @@ main { flex: 1; }
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+.application-error { display: grid; justify-items: center; gap: 22px; max-width: 640px; margin: 10svh auto; padding: 30px 22px; text-align: center; }
+.application-error h1 { font-size: clamp(32px, 6vw, 48px); line-height: 1.2; }
+.application-error > p { max-width: 500px; }
+.application-error-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.application-error-note { color: var(--muted); font-size: 12px; }

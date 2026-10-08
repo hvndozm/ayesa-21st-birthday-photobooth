@@ -12,6 +12,7 @@ import ActionLink from '../components/ActionLink.jsx'
 import { captureMockFrame, captureVideoFrame } from '../utils/cameraCapture.js'
 import { createCaptureSearch } from '../utils/captureNavigation.js'
 import { createSelectionSearch } from '../utils/photoboothNavigation.js'
+import { isDevelopmentMockCamera } from '../utils/mockCameraMode.js'
 
 const emptyPhotos = [null, null, null, null]
 
@@ -232,7 +233,7 @@ export default function CameraPage({ photoSession, savePhotoSession }) {
   const [searchParams] = useSearchParams()
   const format = getPhotoboothFormat(searchParams.get('format'))
   const selected = useSelectedBoothDesign(format?.id, searchParams.get('design'), photoSession?.design)
-  const mockMode = import.meta.env.DEV && searchParams.get('mockCamera') === 'true'
+  const mockMode = isDevelopmentMockCamera(searchParams)
   if (!format) return <Navigate to="/photobooth" replace />
   if (selected.status === 'invalid') return <Navigate to={`/photobooth/designs${createSelectionSearch(format.id)}`} replace />
   if (selected.status !== 'ready') return <BoothPageLayout currentStep={3} className="camera-page"

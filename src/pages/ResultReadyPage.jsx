@@ -12,6 +12,7 @@ import { isCustomDesign } from '../data/photoboothDesigns.js'
 import { getSessionDesign, hasFourPhotos } from '../utils/photoSessionSelection.js'
 import { createSelectionSearch } from '../utils/photoboothNavigation.js'
 import { createCaptureSearch } from '../utils/captureNavigation.js'
+import { isDevelopmentMockCamera } from '../utils/mockCameraMode.js'
 
 function PhotostripResult({ format, design, mockMode, photos, clearPhotoSession, output }) {
   const navigate = useNavigate()
@@ -55,7 +56,7 @@ export default function ResultReadyPage({ photoSession, clearPhotoSession, outpu
   const [searchParams] = useSearchParams()
   const format = getPhotoboothFormat(searchParams.get('format'))
   const design = getSessionDesign(photoSession, format?.id, searchParams.get('design'))
-  const mockMode = import.meta.env.DEV && searchParams.get('mockCamera') === 'true'
+  const mockMode = isDevelopmentMockCamera(searchParams)
   if (!format) return <Navigate to="/photobooth" replace />
   if (!design) return <Navigate to={`/photobooth/designs${createSelectionSearch(format.id)}`} replace />
   if (!hasFourPhotos(photoSession, format.id, design.id, mockMode)) return <MissingPhotos format={format} design={design} mockMode={mockMode} currentStep={5} />

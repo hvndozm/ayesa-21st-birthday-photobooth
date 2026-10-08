@@ -5,6 +5,7 @@
 .camera-page .booth-steps { margin-bottom: 24px; }
 .camera-page button.button--text { background: transparent; }
 .camera-selection-label { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-bottom: 21px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.camera-selection-label > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .camera-selection-label > span:last-child { color: var(--berry); }
 .camera-panel { max-width: 680px; margin-inline: auto; scroll-margin-top: 16px; }
 .camera-gallery-notice { display: flex; align-items: flex-start; gap: 10px; max-width: 680px; margin: 0 auto 20px; padding: 13px 15px; border: 1px solid #decee8; border-radius: 15px; background: #f2eaf7; color: #684b7b; font-size: 11px; }

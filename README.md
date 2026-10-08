@@ -5,7 +5,7 @@ Vite, JavaScript, React Router, and plain CSS.
 
 ## Run locally
 
-Use Node.js 20.19+ or 22.12+, as required by this project's Vite version.
+Use Node.js 22.12 or later to meet the installed Vite and Supabase requirements.
 
 ```sh
 npm install
@@ -652,10 +652,51 @@ Existing App routes, camera/design/result components, photo/output/save hooks,
 Canvas utilities, Admin upload count checks, gallery services/captions, and their
 focused tests were extended. No new package or environment variable is required.
 
-## Future hosting
+## Deploy to Vercel
 
-Deployment is outside these phases. Since this project uses `BrowserRouter`, a future
-host must serve `index.html` for frontend routes such as `/photobooth` and
-`/messages`. GitHub Pages will need an appropriate route fallback or a separately
-planned routing adjustment. Keep secrets in ignored `.env` files when backend
-work is explicitly requested.
+The production frontend runs on **Vercel**, imported from the existing **GitHub**
+repository. **Supabase** remains the backend, authentication, database, and private
+Storage service. No custom server is required.
+
+1. Review the changes, then commit and push the intended release to GitHub yourself.
+2. In Vercel, choose **Add New → Project** and import that repository. Use the folder
+   containing `package.json` and `vercel.json` as the Root Directory.
+3. Select **Vite**, Build Command **`npm run build`**, and Output Directory **`dist`**.
+4. Configure the following environment-variable names for **Production**, using
+   your own project's URL and publishable browser key. These empty entries show
+   names only; actual values belong in Vercel settings or ignored `.env.local`:
+
+   ```text
+   VITE_SUPABASE_URL=
+   VITE_SUPABASE_PUBLISHABLE_KEY=
+   ```
+
+5. Deploy from your Vercel account and record the final production HTTPS URL.
+   Changes to these build-time values require a new deployment. Review Preview
+   environment settings separately before sharing a preview connected to real data.
+
+The root `vercel.json` serves `index.html` for SPA deep links, keeping the requested
+URL for React Router. Refreshing `/photobooth/filter`, `/ayesa/gallery`, or
+`/admin/designs` must reach the application; its existing recovery and role guards
+still apply. See [Vercel's Vite SPA guidance](https://vercel.com/docs/frameworks/frontend/vite).
+
+After deployment, open **Supabase → Authentication → URL Configuration**. Set
+**Site URL** to the exact production HTTPS URL. Allow only the production return
+URLs actually needed; keep `http://localhost:5173/**` and, if used,
+`http://127.0.0.1:5173/**` for development. See
+[Supabase redirect configuration](https://supabase.com/docs/guides/auth/redirect-urls).
+Keep anonymous sign-ins enabled, existing RLS policies enabled, both
+`photostrips` and `template-designs` **private**, and the manually provisioned
+Ayesa/Admin profile roles intact.
+
+`VITE_*` values are visible in the browser bundle, so never supply a secret key,
+`service_role` key, or database password. The development-only `mockCamera=true`
+flag is ignored in the production build; guests use the real camera over HTTPS.
+The initial `*.vercel.app` URL is sufficient; a custom domain is optional.
+
+Follow the [deployment and launch checklist](docs/deployment.md) for private-data
+verification, physical iPhone/Android testing, optional manual test-data cleanup,
+and strongly recommended Turnstile/hCaptcha preparation. CAPTCHA needs provider
+configuration **and client token integration before it is enabled**; Phase 11
+does not invent credentials or add an unconfigured challenge. Local/fixture checks
+do not certify real deployed RLS, private bucket flags, or physical camera behavior.

@@ -11,6 +11,7 @@ import usePhotoSession from './hooks/usePhotoSession.js'
 import useGeneratedPhotostrip from './hooks/useGeneratedPhotostrip.js'
 import { getPhotoboothFormat } from './data/photoboothFormats.js'
 import { hasFourPhotos } from './utils/photoSessionSelection.js'
+import { isDevelopmentMockCamera } from './utils/mockCameraMode.js'
 import MessagesPage from './pages/MessagesPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import PrivateLogin from './components/PrivateLogin.jsx'
@@ -80,7 +81,7 @@ export default function App() {
   const outputPath = pathname.replace(/\/+$/, '') || '/'
   const outputEnabled = ['/photobooth/filter', '/photobooth/result'].includes(outputPath)
     && hasFourPhotos(photoSession, parameters.get('format'), parameters.get('design'),
-      import.meta.env.DEV && parameters.get('mockCamera') === 'true')
+      isDevelopmentMockCamera(parameters))
   const output = useGeneratedPhotostrip(format, photoSession?.design, photoSession?.photos, photoSession?.filterId ?? 'original', outputEnabled)
 
   return (

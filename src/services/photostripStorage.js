@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../lib/supabaseClient.js'
+import { runAuthOperation } from './authOperationLock.js'
 import { getPhotoboothFormat } from '../data/photoboothFormats.js'
 import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
 
@@ -101,7 +102,7 @@ export async function ensureGuestSession({ client = getSupabaseClient(), timeout
   requireClient(client)
   let pending = pendingSessions.get(client)
   if (!pending) {
-    pending = readOrCreateSession(client)
+    pending = runAuthOperation(client, () => readOrCreateSession(client))
     pendingSessions.set(client, pending)
     // Retain the underlying request after a caller times out. A retry must
     // join it, not create a second anonymous guest while the first is pending.

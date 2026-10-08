@@ -1,4 +1,4 @@
-# Supabase setup for Phases 5 and 6
+# Supabase setup for Phases 5–7
 
 The frontend uses the installed `@supabase/supabase-js` SDK. It saves one copy
 of the existing high-resolution final PNG; it never uploads the four source
@@ -171,3 +171,65 @@ birthday_messages** in the trusted Dashboard and confirm:
 A successful INSERT API response verifies acceptance of the write. Actual row
 contents/defaults, row counts, and policy configuration require Dashboard
 verification; the guest frontend intentionally does not read messages back.
+
+## Private authentication foundation (Phase 7)
+
+Keep using the same browser publishable configuration and Supabase client.
+Manage the two permanent email/password Auth users manually in the Dashboard;
+do not put their emails/passwords or auth tokens in source, docs, screenshots,
+URLs, or Codex messages. There is no permanent sign-up UI or API call.
+
+The existing `public.profiles` table has `id`, `display_name`, `role`, and
+`created_at`. Each permanent user's `id` must match their Auth UUID, with role
+exactly `ayesa` or `admin`. Anonymous guests have no profile row. Keep profile
+RLS enabled and allow permanent users to SELECT only their own row:
+`id = auth.uid()`. Client-side profile INSERT/UPDATE/DELETE must remain denied,
+particularly role changes. The app never modifies this table or its policies.
+
+The frontend reads only `id, display_name, role` with `.eq('id', user.id)` and
+`.maybeSingle()`. Missing rows, unsupported roles, owner mismatches, and profile
+lookup failures grant no private access. Roles stay in React memory, never
+localStorage, sessionStorage, cookies, or query parameters. The SDK manages its
+own auth session persistence; it is separate from application-role storage.
+
+Login uses `signInWithPassword`, replacing a pre-existing anonymous session.
+The database profile role determines the destination at either private entrance.
+The SDK's `signOut` clears the permanent session; no new guest is created until
+a later public save/send explicitly needs one. A shared auth-operation queue
+coordinates guest creation with login/logout without changing upload/insert
+semantics. Profile work is deferred outside auth callbacks and old results are
+discarded after identity changes.
+
+The two dashboards are placeholders. They do not list photos/messages or
+request signed/public image URLs. React guards are navigation UX, not database
+authorization. Keep existing photostrip and birthday-message RLS unchanged;
+their future private read policies belong to Phases 8/9.
+
+### Manual checks with the real permanent accounts
+
+Credentials are intentionally unavailable to automated development checks.
+Enter them yourself locally; never paste them into Codex.
+
+1. Open `/ayesa/login`, sign in with Ayesa's credentials, and confirm `/ayesa`
+   shows the placeholder dashboard. Refresh and confirm the session/profile
+   restore; Logout must return to the login page and revoke private access.
+2. Repeat at `/admin/login` with the admin account; confirm `/admin`, refresh,
+   and logout. Also test each account through the other login entrance: the
+   profile role must still select its own dashboard.
+3. While signed in as Ayesa, visiting `/admin` redirects to `/ayesa`. The admin
+   visiting `/ayesa` redirects to `/admin`.
+4. A guest with or without an anonymous session must be sent to the relevant
+   login page when opening either private dashboard. The public site requires
+   no permanent login and must show no new Login/Sign Up navigation item.
+5. Verify profile SELECT is owner-scoped and profile writes/role updates remain
+   denied. No new message/photostrip read access should have been granted.
+6. Invalid credentials show a generic error. A permanent user without a valid
+   profile must get access denial. A denied profile SELECT needs a scoped policy
+   review; never fix it by granting unrestricted SELECT or disabling RLS.
+7. After permanent logout, use a public message or photostrip save to verify
+   anonymous creation happens lazily and still works. Existing permanent sessions
+   must be reused if public features are used before logging out.
+
+Simulated SDK/API tests validate these states without real private passwords.
+They cannot verify the real accounts, their profile rows, or deployed policy
+configuration; those checks remain manual.

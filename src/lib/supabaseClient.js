@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
 const REQUEST_TIMEOUT_MS = 12_000
-let client = null
-let initializationAttempted = false
+let client = import.meta.hot?.data.supabaseClient ?? null
+let initializationAttempted = client !== null
+
+// Preserve the shared SDK instance when Vite reloads this module in development.
+// This is memory only; session persistence remains entirely managed by Supabase.
+if (import.meta.hot) {
+  import.meta.hot.dispose((data) => { data.supabaseClient = client })
+}
 
 // Only browser-safe publishable keys belong here. Legacy JWT and secret keys
 // are deliberately rejected rather than interpreted or printed.
@@ -69,9 +75,13 @@ export function createBoundedFetch(fetcher, timeoutMs = REQUEST_TIMEOUT_MS) {
   }
 }
 
-// Lazy initialization keeps routes that do not save photos independent of Auth.
+// One lazily initialized client is shared by guest services and private auth.
 // Node tests can import this module without Vite's import.meta.env existing.
 export function getSupabaseClient() {
+  if (!client && import.meta.hot?.data.supabaseClient) {
+    client = import.meta.hot.data.supabaseClient
+    initializationAttempted = true
+  }
   if (initializationAttempted) return client
   initializationAttempted = true
   const url = import.meta.env?.VITE_SUPABASE_URL
@@ -83,6 +93,7 @@ export function getSupabaseClient() {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, debug: false },
       global: { fetch: createBoundedFetch(globalThis.fetch.bind(globalThis)) },
     })
+    if (import.meta.hot) import.meta.hot.data.supabaseClient = client
   } catch {
     client = null
   }

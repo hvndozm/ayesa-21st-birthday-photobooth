@@ -31,6 +31,8 @@ npm run lint        # Run the existing Oxlint checks
 - `/photobooth/camera`: explicit permission and immediate capture inside the selected design.
 - `/photobooth/result`: full-resolution Canvas photostrip preview and PNG download.
 - `/messages`: private birthday-message submission, with nickname and letter.
+- `/ayesa/login` and `/admin/login`: private email/password entrances.
+- `/ayesa` and `/admin`: role-protected dashboard placeholders.
 - Unknown paths show a friendly page with a link home.
 
 The welcome dialog appears on the first homepage visit in each app load. It can
@@ -206,9 +208,11 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 ```
 
 Never put a secret key, service-role key, or database password in a `VITE_`
-variable. The client loads lazily when a final result needs saving; missing or
-invalid configuration reports gallery saving unavailable while keeping the
-local photobooth usable. Restart Vite after changing local configuration.
+variable. The shared client loads lazily through auth/services; Phase 7 resolves
+an existing session in the background on app startup. Guest saving still starts
+only after the final PNG exists. Missing/invalid configuration reports gallery
+saving unavailable while keeping the local photobooth usable. Restart Vite after
+changing local configuration.
 
 The save service reuses the browser's current Supabase session, including any
 future permanent session. Only when there is no session does it sign in
@@ -281,6 +285,51 @@ the rest of the site. Labels, field-associated errors, live statuses, focus
 management, mobile input sizes, and reduced-motion support keep the flow usable.
 See the setup document for the INSERT-only table policy and manual row checks.
 
+## Phase 7 private authentication foundation
+
+Ayesa/Admin accounts and their matching `public.profiles` rows are created
+manually in Supabase. There is no public registration or login link in the
+birthday navigation. Use the private URLs above directly. The dashboards show
+future-feature cards only; they do not read letters or photostrips.
+
+`AuthProvider` shares a small in-memory controller through React context. It
+resolves the existing SDK session on initialization, observes auth changes, and
+loads only a permanent user's own `id, display_name, role` profile with an
+owner-ID filter. Anonymous users have no application role and cause no profile
+query. An explicit `is_anonymous: false` flag and valid user UUID are required
+for private access; missing or invalid identity/profile/role information grants
+no access. Roles come from profiles, never email, display name, URLs, or browser
+storage. Same-user refresh events reuse the profile; a fresh app load derives
+it again. An explicit retry reloads a failed or missing profile.
+
+Profile reads run after the synchronous auth callback returns, following
+[Supabase's callback guidance](https://supabase.com/docs/guides/troubleshooting/why-is-my-supabase-api-call-not-returning-PGzXw0).
+Revision checks and cancellation discard late responses after an account switch
+or logout. StrictMode shares initialization and pending profile work; the auth
+listener is removed when the provider is no longer used. Public pages do not
+wait for auth initialization.
+
+Both login forms call `signInWithPassword`; the loaded role determines the
+destination regardless of which entrance was used. Wrong-role private routes
+redirect to the user's own area. Unknown profiles get a friendly access denial.
+While the session/profile is resolving, private routes show a loading card.
+Passwords live only in the form input/request, are cleared after an attempt or
+when the field leaves the page, and are never logged or persisted by the app.
+
+Logout calls the SDK's `signOut` and returns to the appropriate private entrance.
+It does not create an anonymous session or manually remove SDK storage entries.
+Guest creation and private login/logout share a small operation queue, so an
+older guest request cannot replace a permanent login. The existing Phase 5/6
+helper still reuses any valid session and creates a guest only for an explicit
+public save/send operation when no session exists.
+
+React route guards protect navigation only. Database/Storage RLS remains the
+security boundary, as described in the
+[Supabase RLS guide](https://supabase.com/docs/guides/database/postgres/row-level-security).
+No profile write, role selector, privileged key, or new gallery/message read
+policy is added. See the setup document for own-profile permission requirements
+and the manual checks for the two real private accounts.
+
 ## Structure
 
 ```text
@@ -289,6 +338,7 @@ src/
   main.jsx                React entry point and BrowserRouter
   components/             Layout, selection, live composition, and photo inspector
   hooks/                  Camera/session lifecycle, PNG ownership, and message sending
+  auth/                   Shared auth state and private-role access decisions
   lib/                    Lazy publishable-key Supabase client
   services/               Private PNG/message saving and current-result save guard
   data/                   Central format and placeholder design configuration
@@ -305,8 +355,9 @@ Custom birthday images can replace the three labeled homepage placeholders
 later; see `src/assets/README.md`. All current decorations are original CSS shapes
 and simple line icons, with no copyrighted character artwork or external assets.
 
-Template uploads, permanent login UI, and dashboards are reserved for later
-phases. Four source frames remain local; only the finished
+Template uploads and dashboard galleries/inboxes/management are reserved for
+later phases. Private login and protected placeholder dashboards are available.
+Four source frames remain local; only the finished
 PNG gets a private gallery copy. The guest can also save it using Download PNG.
 
 ## Future hosting

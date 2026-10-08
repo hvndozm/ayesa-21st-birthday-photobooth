@@ -2,7 +2,9 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import ActionLink from '../components/ActionLink.jsx'
 import BoothPageLayout from '../components/BoothPageLayout.jsx'
 import Icon from '../components/Icon.jsx'
+import GallerySaveStatus from '../components/GallerySaveStatus.jsx'
 import useGeneratedPhotostrip from '../hooks/useGeneratedPhotostrip.js'
+import usePhotostripGallerySave from '../hooks/usePhotostripGallerySave.js'
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
 import { getPlaceholderDesign } from '../data/placeholderDesigns.js'
 import { createSelectionSearch } from '../utils/photoboothNavigation.js'
@@ -30,6 +32,7 @@ function MissingPhotos({ format, design }) {
 function PhotostripResult({ format, design, mockMode, photos, clearPhotoSession }) {
   const navigate = useNavigate()
   const { status, result, retry } = useGeneratedPhotostrip(format, design, photos)
+  const gallerySave = usePhotostripGallerySave(photos, result, format, design)
   const cameraUrl = `/photobooth/camera${createCaptureSearch(format.id, design.id, mockMode)}`
 
   function takeAnother() {
@@ -81,8 +84,9 @@ function PhotostripResult({ format, design, mockMode, photos, clearPhotoSession 
             <ActionLink to={cameraUrl} variant="secondary" icon="redo" className="result-retake">Retake Photos</ActionLink>
             <ActionLink to="/" variant="text" icon="heart" className="result-home">Home</ActionLink>
           </div>
+          {status === 'ready' && <GallerySaveStatus save={gallerySave} />}
           {status === 'ready' && <p className="result-save-hint">On your phone, check your browser’s downloads. If it opens the image, press and hold to save it.</p>}
-          <p className="result-privacy"><Icon name="heart" />Just for you. Nothing is uploaded.</p>
+          <p className="result-privacy"><Icon name="heart" />Your gallery copy stays private.</p>
           <p className="result-memory-note">Save your keepsake before refreshing or leaving the photobooth.</p>
           {import.meta.env.DEV && status === 'ready' && <p className="result-dimensions">{result.width} × {result.height} px</p>}
         </div>

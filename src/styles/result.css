@@ -19,6 +19,14 @@
 .result-privacy .icon { width: 13px; height: 13px; }
 .result-memory-note, .result-dimensions { margin-top: 9px; color: var(--muted); font-size: 10px; text-align: center; }
 .result-dimensions { color: #735b7f; }
+.gallery-save-status { margin-top: 18px; padding: 13px 14px; border: 1px solid #e1ccd9; border-radius: 15px; background: #faedf3; color: #754b65; }
+.gallery-save-status > p { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; line-height: 1.7; }
+.gallery-save-status .icon { width: 15px; height: 15px; margin-top: 3px; }
+.gallery-save-status--success { background: #f1edf8; border-color: #d9cde8; color: #684b7b; }
+.gallery-save-status > .gallery-save-note { margin-top: 7px; font-size: 10px; }
+.gallery-save-retry { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; margin-top: 5px; padding: 9px 7px; border: 0; border-radius: 7px; background: transparent; color: var(--berry); font-size: 11px; font-weight: 600; }
+.gallery-save-retry .icon { margin-top: 0; }
+.gallery-save-retry:hover { text-decoration: underline; text-underline-offset: 4px; }
 
 .result-state { display: flex; flex-direction: column; align-items: center; gap: 17px; padding: 25px 0; text-align: center; }
 .result-state-art { display: grid; place-items: center; width: 76px; height: 76px; border: 1px dashed #c291ae; border-radius: 50%; background: #fae1ec; color: var(--berry); }

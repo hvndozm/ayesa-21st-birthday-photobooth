@@ -19,7 +19,7 @@ and `npm.cmd run dev` instead.
 ```sh
 npm run build       # Build the production frontend into dist/
 npm run preview     # Serve the production build locally
-npm test            # Check cover cropping and the standard layout geometry
+npm test            # Check layouts, cropping, and private-save behavior
 npm run lint        # Run the existing Oxlint checks
 ```
 
@@ -112,8 +112,9 @@ A single-camera device remains fully usable.
 Photos are held in React state above the camera/result routes, as Blobs with
 object URLs and dimensions. Retakes replace one array entry; superseded object
 URLs are revoked. URLs are also revoked when the session is cleared or the app
-unmounts. Leaving the photobooth for Home/messages clears the session. Nothing
-is uploaded, logged, or stored in localStorage. Refresh clears the photos; the
+unmounts. Leaving the photobooth for Home/messages clears the session. The four
+source photos are never uploaded, logged, or stored in localStorage. Phase 5
+saves a private copy of the final PNG only. Refresh clears the local photos; the
 result route shows a friendly recovery message and a Return to Photobooth link
 that retains the selected format and design.
 
@@ -189,6 +190,64 @@ above, take four photos, confirm, and download. Mock photos use the same rendere
 and produce a real PNG at the dimensions in the table. Dimensions are shown
 quietly on the result page in development only.
 
+## Phase 5 private birthday-gallery copy
+
+The completed PNG Blob also goes to Supabase after generation. Local preview
+and **Download PNG** work independently of gallery saving, including offline,
+missing configuration, rejected permissions, and network failures. No login or
+public gallery is shown to guests.
+
+Configure these variables in ignored `.env.local`, using your own project's
+publishable browser key. `.env.example` contains blank variable names only:
+
+```text
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+```
+
+Never put a secret key, service-role key, or database password in a `VITE_`
+variable. The client loads lazily when a final result needs saving; missing or
+invalid configuration reports gallery saving unavailable while keeping the
+local photobooth usable. Restart Vite after changing local configuration.
+
+The save service reuses the browser's current Supabase session, including any
+future permanent session. Only when there is no session does it sign in
+anonymously, without guest-facing account UI. Concurrent session requests share
+one initialization. The SDK persists/refreshes its authentication session;
+photos and PNGs are not persisted in browser storage. No sign-out occurs after
+saving.
+
+Only one final PNG is uploaded to private bucket `photostrips`, at
+`<authenticated-user-uuid>/<random-uuid>.png`, with `image/png` and
+`upsert: false`. After successful upload, the service inserts `owner_id`,
+`storage_path`, `format_id`, `design_id`, `width`, and `height` into
+`public.photostrips`. Database defaults handle `created_at`. It requests no
+public URL, gallery listing, or metadata SELECT.
+
+A weakly keyed save record identifies the current immutable photo set and
+format/design. StrictMode effects, status updates, repeated renders, and
+returning from the camera without editing photos share the same pending or
+completed save. A definite failure retries only through **Try Again**; changing
+an individual photo creates a new result eligible for a new gallery copy.
+
+For a definite metadata rejection after upload, the service attempts to delete
+only the just-uploaded object. Cleanup needs appropriately scoped Storage
+permissions and must be verified in the Dashboard. Network requests and service
+stages are bounded, with no infinite save retry. When a write's response is lost,
+its outcome may be unknown: the UI keeps Download available, reports that the
+gallery copy could not be confirmed, and avoids a blind duplicate retry or
+destructive cleanup of a possibly successful insert. Check the Dashboard before
+repeating that result. This frontend guard is not a cross-device transaction.
+
+A short notice before capture explains the private gallery copy. The result
+shows saving, success, unavailable, or failure status without replacing the
+finished image or Download action. Mock-camera PNGs follow the same upload path
+as real-camera PNGs; use generated test images for development verification.
+
+See [Supabase setup and verification](docs/supabase-setup.md) for required
+resources, owner-scoped policy requirements, and manual Dashboard checks. No
+database/Storage policies are created or weakened by the application.
+
 ## Structure
 
 ```text
@@ -197,6 +256,8 @@ src/
   main.jsx                React entry point and BrowserRouter
   components/             Layout, selection, live composition, and photo inspector
   hooks/                  Camera/session lifecycle and generated-PNG ownership
+  lib/                    Lazy publishable-key Supabase client
+  services/               Private PNG saving and current-result save guard
   data/                   Central format and placeholder design configuration
   pages/                  Public pages, selection, camera, and result-ready flow
   styles/                 Global, landing, photobooth, camera, and result styles
@@ -211,9 +272,9 @@ Custom birthday images can replace the three labeled homepage placeholders
 later; see `src/assets/README.md`. All current decorations are original CSS shapes
 and simple line icons, with no copyrighted character artwork or external assets.
 
-Message submission, uploads, backend integration, authentication, and dashboards
-are reserved for later phases. Captured frames and generated PNGs stay local;
-the guest explicitly saves the finished photostrip using Download PNG.
+Message submission, template uploads, permanent login UI, and dashboards are
+reserved for later phases. Four source frames remain local; only the finished
+PNG gets a private gallery copy. The guest can also save it using Download PNG.
 
 ## Future hosting
 

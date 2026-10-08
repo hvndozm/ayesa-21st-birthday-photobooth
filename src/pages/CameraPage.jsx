@@ -168,6 +168,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
       description="One tap, one little moment. Fill your four frames with birthday love."
       backTo={designsUrl} backLabel="Back to Designs">
       <div className="camera-selection-label"><span>{format.displayName} · {getFormatDimensions(format)}</span><span>{design.name}</span></div>
+      <p className="camera-gallery-notice"><Icon name="heart" />Your finished photostrip will be saved privately so Ayesa can keep the birthday memories.</p>
       {mockMode && <p className="camera-mock-label" role="status">Development Mock Camera · generated placeholders only</p>}
       {photosMissing && !noticeDismissed && <p className="booth-notice" role="status">
         Your photos aren’t available in this session. Refreshing clears them from memory. Open the camera to take four new photos.
@@ -200,7 +201,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
         </> : <div className="camera-intro">
           <h2>{photos.some(Boolean) ? 'Your next little moment awaits.' : 'A little permission, then a little pose.'}</h2>
           <p>{mockMode ? 'Open the development preview to try these frames with generated photos.'
-            : 'Press Open Camera to allow camera access. Your photos stay in this tab only.'}</p>
+            : 'Press Open Camera to allow camera access. The four source photos stay in this tab.'}</p>
           {displayedError && <CameraError error={displayedError} />}
           {displayedError?.retry !== false && <button type="button" className="button button--primary camera-open-button"
             disabled={camera.status === 'opening'} onClick={openCamera}>
@@ -219,7 +220,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
           {camera.facingMode === 'user' ? 'Front camera · selfie preview and saved photo match.' : 'Rear camera · preview and saved photo match.'}
         </p>}
         {camera.notice && <p className="camera-status-note" role="status">{camera.notice}</p>}
-        <p className="camera-privacy-note"><Icon name="heart" />Your photos stay in this tab. Nothing is uploaded.</p>
+        <p className="camera-privacy-note"><Icon name="heart" />Only your finished photostrip gets a private gallery copy.</p>
       </div>
     </BoothPageLayout>
   )

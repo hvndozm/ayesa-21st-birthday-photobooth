@@ -7,6 +7,8 @@
 .camera-selection-label { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-bottom: 21px; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .camera-selection-label > span:last-child { color: var(--berry); }
 .camera-panel { max-width: 680px; margin-inline: auto; scroll-margin-top: 16px; }
+.camera-gallery-notice { display: flex; align-items: flex-start; gap: 10px; max-width: 680px; margin: 0 auto 20px; padding: 13px 15px; border: 1px solid #decee8; border-radius: 15px; background: #f2eaf7; color: #684b7b; font-size: 11px; }
+.camera-gallery-notice .icon { width: 16px; height: 16px; margin-top: 3px; }
 .camera-live-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; font-size: 11px; color: var(--muted); }
 .camera-live-header > span:first-child { padding: 7px 10px; border-radius: 20px; background: #f8e1eb; color: var(--berry); font-weight: 600; }
 .camera-mock-label { max-width: 680px; margin: 0 auto 16px; padding: 10px 15px; border: 1px dashed #9974b0; border-radius: 12px; background: #eee4f5; color: #67477c; font-size: 11px; line-height: 1.7; text-align: center; }

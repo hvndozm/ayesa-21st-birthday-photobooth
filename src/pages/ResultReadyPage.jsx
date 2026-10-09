@@ -4,6 +4,7 @@ import BoothPageLayout from '../components/BoothPageLayout.jsx'
 import GeneratedPhotostripPreview from '../components/GeneratedPhotostripPreview.jsx'
 import MissingPhotos from '../components/MissingPhotos.jsx'
 import Icon from '../components/Icon.jsx'
+import StudioMotif from '../components/StudioMotif.jsx'
 import GallerySaveStatus from '../components/GallerySaveStatus.jsx'
 import usePhotostripGallerySave from '../hooks/usePhotostripGallerySave.js'
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
@@ -30,8 +31,15 @@ function PhotostripResult({ format, design, mockMode, photos, clearPhotoSession,
     <div className="camera-selection-label"><span>{format.displayName} · {getFormatDimensions(format)}</span><span>{design.name}</span><span>{filterName} filter</span></div>
     {mockMode && <p className="camera-mock-label">Development Mock Camera · generated placeholders only</p>}
     <div className="result-layout">
-      <GeneratedPhotostripPreview output={output} format={format} design={design} filterName={filterName} />
+      <div className="result-keepsake-frame">
+        <GeneratedPhotostripPreview output={output} format={format} design={design} filterName={filterName} />
+        <div className="result-scrapbook-caption" aria-hidden="true"><StudioMotif type="seven-stars" /><span>A night to keep.</span></div>
+      </div>
       <div className="result-details">
+        <div className="result-keepsake-ticket" aria-hidden="true">
+          <div><span>Birthday session · Room 707</span><strong>AYESA / 21</strong><span>Four moments · One night only</span></div>
+          <StudioMotif type="lotus" />
+        </div>
         <p className="result-ready-note" role="status" aria-live="polite"><Icon name="check" />Your birthday keepsake is ready to save.</p>
         <div className="result-actions">
           <a className="button button--primary result-download" href={result.url} download={filename} target="_blank" rel="noopener">

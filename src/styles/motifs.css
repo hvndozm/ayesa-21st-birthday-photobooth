@@ -1,0 +1,28 @@
+/* A small family of original fashion-scrapbook decorations. No interactive art. */
+.studio-motif { display: inline-block; flex: none; position: relative; max-width: 100%; vertical-align: middle; pointer-events: none; user-select: none; }
+.studio-motif > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.studio-motif--glasses { width: 92px; }
+.studio-motif--lotus { width: 64px; color: var(--berry); }
+.studio-motif--seven-stars { width: 114px; color: var(--accent); }
+.studio-star--1 { fill: var(--red); }
+.studio-star--2 { fill: #8b8590; }
+.studio-motif--chain { width: 180px; color: #8b8590; }
+.studio-motif--safety-pin { width: 52px; color: #6b636e; }
+.studio-motif--record { width: 68px; }
+.studio-motif--room-tag { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 55px; min-height: 82px; padding: 16px 7px 8px; border: 1px solid var(--accent); border-radius: 16px 16px 4px 4px; background: var(--paper); color: var(--accent); box-shadow: 2px 3px 0 #30273018; }
+.room-tag-hole { position: absolute; top: 6px; width: 5px; height: 5px; border: 1px solid #8b8590; border-radius: 50%; background: var(--cream); }
+.studio-motif--room-tag > small { font-size: 7px; font-weight: 700; letter-spacing: 2px; }
+.studio-motif--room-tag > strong { margin-block: 3px; font-family: var(--serif); font-size: 27px; font-weight: 400; line-height: 1; }
+.room-tag-rule { width: 24px; height: 3px; border-block: 1px solid var(--red); }
+.studio-motif--ticket { display: inline-flex; width: 220px; padding: 12px 10px; border-block: 1px solid var(--accent); background: var(--pink); color: var(--accent); clip-path: polygon(0 4%, 4% 0, 8% 4%, 12% 0, 16% 4%, 20% 0, 24% 4%, 28% 0, 32% 4%, 36% 0, 40% 4%, 44% 0, 48% 4%, 52% 0, 56% 4%, 60% 0, 64% 4%, 68% 0, 72% 4%, 76% 0, 80% 4%, 84% 0, 88% 4%, 92% 0, 96% 4%, 100% 0, 100% 96%, 96% 100%, 92% 96%, 88% 100%, 84% 96%, 80% 100%, 76% 96%, 72% 100%, 68% 96%, 64% 100%, 60% 96%, 56% 100%, 52% 96%, 48% 100%, 44% 96%, 40% 100%, 36% 96%, 32% 100%, 28% 96%, 24% 100%, 20% 96%, 16% 100%, 12% 96%, 8% 100%, 4% 96%, 0 100%); }
+.ticket-side { align-self: stretch; display: grid; place-items: center; width: 28px; padding-right: 7px; margin-right: 12px; border-right: 1px dashed var(--berry); writing-mode: vertical-rl; transform: rotate(180deg); font-size: 9px; font-weight: 700; letter-spacing: 2px; }
+.ticket-copy { display: grid; gap: 6px; }
+.ticket-copy small { font-size: 7px; font-weight: 700; letter-spacing: 1.3px; color: var(--red); }
+.ticket-copy strong { font-family: var(--serif); font-size: 25px; font-weight: 400; font-style: italic; line-height: .95; }
+.ticket-copy > span { font-size: 6px; font-weight: 600; letter-spacing: 1px; }
+.studio-signature { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px 11px; max-width: 100%; color: var(--muted); pointer-events: none; }
+.studio-signature-room { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 3px; background: var(--paper); color: var(--accent); font-size: 7px; letter-spacing: 1px; }
+.studio-signature-room strong { font-family: var(--serif); font-size: 15px; font-weight: 400; letter-spacing: 0; }
+.studio-signature .studio-motif--seven-stars { width: 88px; }
+.studio-signature-note { font-size: 7px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+@media (max-width: 374px) { .studio-signature-note { display: none; } }

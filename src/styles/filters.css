@@ -1,4 +1,4 @@
-.design-group-title { margin: 30px 0 16px; color: var(--berry); font-size: 25px; }
+.design-group-title { margin: 30px 0 16px; padding-bottom: 10px; border-bottom: 1px dashed #b298a3; color: var(--ink); font-size: 25px; }
 .custom-catalog-note { padding: 20px; border: 1px dashed #c8adc9; border-radius: 18px; background: #f4edf7; color: #6f517b; font-size: 12px; text-align: center; }
 .custom-design-card-wrap { display: flex; flex-direction: column; min-width: 0; }
 .custom-design-card-wrap .design-card { flex: 1; width: 100%; }
@@ -17,30 +17,55 @@
 .capture-composition--custom .capture-frame { position: absolute; border-radius: 0; }
 .capture-composition--custom .capture-slot-label { z-index: 3; }
 .capture-composition--custom .capture-retake-button { z-index: 4; }
-.filter-details { min-width: 0; width: 100%; }
+.filter-details { min-width: 0; width: 100%; padding: 20px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); box-shadow: 2px 4px 0 #3027300b; }
 .filter-details > .eyebrow { margin-bottom: 15px; }
 .filter-options { display: grid; gap: 10px; }
-.filter-option { display: flex; align-items: center; gap: 13px; width: 100%; min-height: 73px; padding: 12px 15px; border: 1px solid #deccd9; border-radius: 17px; background: #fffaf8; color: var(--ink); text-align: left; transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease; }
-.filter-option[aria-pressed="true"] { border-color: var(--berry); background: #fce6f0; box-shadow: 0 0 0 1px var(--berry); }
+.filter-option { display: flex; align-items: center; gap: 13px; width: 100%; min-height: 73px; padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); color: var(--ink); text-align: left; transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease; }
+.filter-option[aria-pressed="true"] { border-color: var(--accent); background: #f4e1e8; box-shadow: 0 0 0 1px var(--accent); }
 .filter-option:active { transform: scale(.99); }
-.filter-option > span:last-child { display: grid; gap: 3px; }
+.filter-option > span:last-child { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
 .filter-option strong { font-size: 14px; }
 .filter-option > span:last-child > span { font-size: 11px; color: var(--muted); }
-.filter-swatch { display: grid; flex: none; place-items: center; width: 43px; height: 43px; border-radius: 13px; background: #efe1e8; color: #734a65; }
+.filter-swatch { display: grid; flex: none; place-items: center; width: 43px; height: 43px; border: 1px solid #b298a3; border-radius: 7px; background: #efe1e8; color: #734a65; }
+.filter-option[aria-pressed="true"] .filter-swatch { border-color: var(--accent); background: var(--accent); color: var(--paper); }
 .filter-swatch--blurry { background: radial-gradient(ellipse at center, #fff4f7, #e9d9eb); }
 .filter-swatch--digicam { background: linear-gradient(145deg, #c3d4ef, #f3d9e2); }
 .filter-swatch--polaroid { background: linear-gradient(145deg, #e5d4b9, #f4e1d5); }
 .filter-swatch--mono { background: linear-gradient(145deg, #e1e0e2, #c9c7cc); color: #514958; }
 .filter-swatch .icon { width: 20px; height: 20px; }
-.filter-current { margin-block: 16px; color: var(--berry); font-size: 12px; }
+.filter-current { margin-block: 16px; padding: 10px 0; border-block: 1px dashed var(--line); color: var(--berry); font-size: 12px; }
 .filter-continue { width: 100%; }
 .filter-continue:disabled { cursor: default; background: #eedee5; border-color: #d9bbc9; color: #705564; box-shadow: none; }
 .filter-hint { margin-top: 16px; color: var(--muted); font-size: 11px; text-align: center; }
-@media (hover: hover) { .filter-option:hover { border-color: #b87d98; background: #fff0f6; } }
+@media (hover: hover) {
+  .filter-option:hover { border-color: #a48291; background: #fcf1f4; }
+  .filter-option[aria-pressed="true"]:hover { border-color: var(--accent); background: #f4e1e8; }
+}
 @media (min-width: 650px) {
   .filter-layout { align-items: start; }
   .filter-details { max-width: 400px; padding-top: 20px; }
   .custom-design-preview--vertical-strip { width: 67px; }
   .custom-design-preview--portrait-grid { max-width: 135px; }
   .custom-design-preview--landscape-grid { max-width: 195px; }
+}
+
+/* A record sleeve and numbered tracklist frame the unchanged filter controls. */
+.filter-preview-sleeve { min-width: 0; }
+.filter-sleeve-caption { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 9px 6px; pointer-events: none; }
+.filter-sleeve-caption > span { color: var(--red); font-size: 8px; font-weight: 700; letter-spacing: 1px; line-height: 1.6; text-transform: uppercase; }
+.filter-sleeve-caption .studio-motif--glasses { flex: none; width: 75px; transform: rotate(-8deg); }
+.filter-sleeve-caption .studio-motif--safety-pin { flex: none; width: 38px; height: 25px; }
+.filter-details { border-color: #a48291; border-top: 5px solid var(--ink); border-radius: 5px 16px 5px 16px; background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--tartan) border-box; }
+.filter-sleeve-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; padding-bottom: 14px; border-bottom: 1px dashed #a48291; }
+.filter-sleeve-heading > div { min-width: 0; }
+.filter-sleeve-heading .eyebrow { margin-top: 5px; color: var(--ink); font-size: 10px; letter-spacing: 1px; }
+.filter-sleeve-heading .studio-motif--record { flex: none; width: 52px; height: 52px; transform: rotate(-8deg); }
+.filter-sleeve-label { color: var(--red); font-size: 8px; font-weight: 600; line-height: 1.6; letter-spacing: 0.6px; text-transform: uppercase; }
+.filter-option { display: grid; grid-template-columns: 20px 38px minmax(0, 1fr); gap: 10px; padding: 12px 10px; border-radius: 5px; }
+.filter-swatch { width: 38px; height: 38px; border-radius: 50%; }
+.filter-track-number { color: var(--red); font-family: var(--serif); font-size: 17px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.filter-option[aria-pressed="true"] { border-left: 4px solid var(--red); }
+.filter-option[aria-pressed="true"] .filter-track-number { color: var(--ink); }
+@media (max-width: 374px) {
+  .filter-sleeve-caption .studio-motif--safety-pin { display: none; }
 }

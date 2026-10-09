@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import ActionLink from '../components/ActionLink.jsx'
 import Decoration from '../components/Decoration.jsx'
 import Icon from '../components/Icon.jsx'
+import StudioMotif from '../components/StudioMotif.jsx'
+import StudioSignature from '../components/StudioSignature.jsx'
 import useBirthdayMessage from '../hooks/useBirthdayMessage.js'
 import { validateBirthdayMessage, NICKNAME_MAX_LENGTH, MESSAGE_MAX_LENGTH } from '../utils/birthdayMessageValidation.js'
 import '../styles/messages.css'
@@ -10,11 +12,13 @@ function LetterIllustration() {
   return (
     <div className="message-illustration" aria-hidden="true">
       <div className="letter-preview">
+        <StudioMotif type="safety-pin" className="message-letter-pin" />
         <div className="letter-paper">
           <span className="handwritten">Dear Ayesa,</span>
           <span className="letter-line" /><span className="letter-line" />
           <span className="letter-line letter-line--short" />
           <Decoration type="heart" />
+          <StudioMotif type="lotus" className="message-letter-lotus" />
         </div>
         <div className="letter-envelope"><Decoration type="heart" /></div>
         <Decoration type="sparkle" className="letter-sparkle" />
@@ -67,6 +71,7 @@ export default function MessagesPage() {
           <span className="birthday-tag"><Icon name="mail" />A birthday wish, just for her</span>
           <h1 id="messages-title">Leave a little love<br /><em>for Ayesa.</em><span className="heading-dot"> ♡</span></h1>
           <p>A sweet birthday wish. A memory that still makes you smile. All the lovely things you’ve been meaning to say.</p>
+          <div className="message-stationery-seal" aria-hidden="true"><StudioMotif type="lotus" /><span className="handwritten">a little love, in ink</span><StudioMotif type="seven-stars" /></div>
           <LetterIllustration />
         </header>
 
@@ -75,6 +80,7 @@ export default function MessagesPage() {
             <div className="message-success" role="status" aria-live="polite">
               <div className="message-success-art" aria-hidden="true">
                 <Icon name="mail" />
+                <StudioMotif type="glasses" className="message-success-glasses" />
                 <Decoration type="heart" className="message-heart message-heart--one" />
                 <Decoration type="heart" className="message-heart message-heart--two" />
                 <Decoration type="sparkle" className="message-heart message-heart--three" />
@@ -91,7 +97,7 @@ export default function MessagesPage() {
             <form className="message-form" onSubmit={handleSubmit} noValidate aria-busy={busy}>
               <div className="message-card-heading">
                 <div><p className="eyebrow">For her twenty-first chapter</p><h2>A note from you</h2></div>
-                <Decoration type="bow" />
+                <div className="message-heading-sticker" aria-hidden="true"><StudioMotif type="glasses" /><Decoration type="bow" /></div>
               </div>
               <div className="message-field">
                 <label htmlFor="message-nickname">Nickname</label>
@@ -130,6 +136,7 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
+      <StudioSignature className="message-studio-signature" />
       <p className="message-bottom-note">A few words. A whole lot of love.</p>
     </section>
   )

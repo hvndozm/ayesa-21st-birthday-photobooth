@@ -31,14 +31,20 @@ function render(Component, format, design, overrides = {}) {
   }))
 }
 
-test('countdown overlays only the active frame for every built-in design and keeps all four frames', async () => {
+test('countdown sits above the print for every built-in design and keeps all four frames unobstructed', async () => {
   const Component = await loadComposition()
   for (const format of photoboothFormats) {
     for (const design of placeholderDesigns.filter((entry) => entry.formatId === format.id)) {
       const html = render(Component, format, design, { countdown: 3, busy: true })
       assert.equal((html.match(/class="capture-frame(?: is-active)?"/g) ?? []).length, 4)
       assert.equal((html.match(/class="camera-countdown"/g) ?? []).length, 1)
-      assert.match(html, /class="capture-frame is-active"[\s\S]*?fixture-live-camera[\s\S]*?class="camera-countdown" aria-hidden="true"><span>3<\/span>/)
+      assert.ok(html.indexOf('class="camera-countdown"') < html.indexOf('class="booth-print capture-composition'))
+      const frames = html.match(/<ol class="booth-preview-frames capture-frames"[\s\S]*?<\/ol>/)[0]
+      assert.equal(frames.includes('camera-countdown'), false)
+      assert.match(frames, /class="capture-frame is-active"[\s\S]*?fixture-live-camera/)
+      assert.match(html, /class="camera-countdown-area" role="status" aria-live="polite" aria-atomic="true"/)
+      assert.match(html, /class="camera-countdown-number" aria-hidden="true">3<\/span>/)
+      assert.match(html, /Photo 2 in 3 seconds\./)
       assert.match(html, /booth-print-caption/)
       assert.match(html, /booth-print-motif/)
       assert.match(html, new RegExp(`booth-print--${design.theme}`))
@@ -56,7 +62,9 @@ test('custom countdown keeps the original PNG, centralized coordinates, and capt
     })
     assert.match(html, /capture-composition--custom/)
     assert.match(html, /class="custom-template-overlay" src="blob:original-overlay"/)
-    assert.match(html, /class="camera-countdown" aria-hidden="true"><span>5<\/span>/)
+    assert.ok(html.indexOf('class="camera-countdown"') < html.indexOf('class="booth-print capture-composition'))
+    assert.match(html, /class="camera-countdown-number" aria-hidden="true">5<\/span>/)
+    assert.match(html, /Photo 2 in 5 seconds\./)
     assert.match(html, /blob:previous-photo/)
     assert.match(html, /aria-label="Retake Photo 1" disabled=""/)
     for (const frame of format.frames) {
@@ -74,11 +82,29 @@ test('no-timer composition keeps photos, retakes, and the existing frame flash w
     onRetake: () => {}, flashSlot: 0, flashNumber: 1,
     photos: [{ url: 'blob:immediate-photo', width: 1280, height: 960 }, null, null, null],
   })
-  assert.equal(html.includes('camera-countdown'), false)
+  assert.equal(html.includes('class="camera-countdown"'), false)
+  assert.match(html, /class="camera-countdown-area"/)
+  assert.match(html, /Your birthday studio/)
   assert.match(html, /aria-label="Retake Photo 1"/)
   assert.match(html, /camera-flash-overlay/)
   assert.match(html, /blob:immediate-photo/)
   assert.equal(html.includes('disabled=""'), false)
+})
+
+test('every timer tick announces the active retake without hiding the remaining captured photos', async () => {
+  const Component = await loadComposition()
+  const photos = [0, 1, 2, 3].map((slot) => slot === 2 ? null : ({
+    url: `blob:captured-${slot}`, width: 1280, height: 960,
+  }))
+  for (const countdown of [5, 4, 3, 2, 1]) {
+    const html = render(Component, photoboothFormats[0], placeholderDesigns[0], {
+      countdown, photos, activeSlot: 2, busy: true, onRetake: () => {},
+    })
+    assert.match(html, new RegExp(`Photo 3 in ${countdown} ${countdown === 1 ? 'second' : 'seconds'}\\.`))
+    assert.equal((html.match(/class="camera-countdown"/g) ?? []).length, 1)
+    assert.equal((html.match(/src="blob:captured-/g) ?? []).length, 3)
+    assert.equal((html.match(/aria-label="Retake Photo [124]" disabled=""/g) ?? []).length, 3)
+  }
 })
 
 test('development countdown calls the actual mock generator once with the active slot and capture number', async () => {

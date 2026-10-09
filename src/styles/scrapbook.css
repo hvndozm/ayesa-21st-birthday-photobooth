@@ -1,0 +1,54 @@
+/* Art-directed memorabilia sits around the homepage photos, away from controls. */
+.hero-signature { margin-top: 14px; }
+.collage-flyer { position: absolute; z-index: 0; top: 2%; left: 23%; width: 55%; padding-bottom: 18px; border: 1px solid var(--accent); background: var(--paper); color: var(--accent); transform: rotate(-5deg); clip-path: polygon(0 0, 100% 0, 100% 96%, 94% 98%, 88% 96%, 82% 100%, 76% 96%, 70% 99%, 64% 96%, 58% 100%, 52% 96%, 46% 99%, 40% 97%, 34% 100%, 28% 96%, 22% 98%, 16% 96%, 10% 100%, 4% 97%, 0 99%); }
+.flyer-kicker { display: block; padding: 7px 5px; background: var(--red); color: var(--paper); font-size: clamp(6px, 1.9vw, 9px); font-weight: 700; letter-spacing: 1.5px; text-align: center; }
+.collage-flyer > strong { display: block; padding: 9px 13px 0; font-size: clamp(26px, 7.4vw, 47px); font-weight: 900; letter-spacing: -1.6px; line-height: .9; }
+.collage-flyer > strong > span { display: block; color: var(--red); font-family: var(--serif); font-size: 1.6em; font-style: italic; font-weight: 400; }
+.flyer-subtitle { display: block; margin: 8px 13px; font-family: var(--serif); font-size: 12px; font-style: italic; }
+.collage-flyer > .studio-motif { margin-left: 13px; width: 65%; }
+.flyer-footer { display: block; padding: 5px 13px; font-size: 6px; font-weight: 700; letter-spacing: 1.2px; }
+.birthday-collage .collage-glasses { position: absolute; z-index: 5; top: 11%; left: 0; width: 30%; padding: 5px; border: 1px dashed #bba2ae; border-radius: 43% 43% 36% 36%; background: #fffdf8ed; transform: rotate(-14deg); filter: drop-shadow(1px 3px 0 #30273020); }
+.birthday-collage .collage-room-tag { position: absolute; z-index: 5; top: 8%; right: 5%; transform: rotate(12deg); background: var(--accent); color: var(--paper); }
+.collage-room-tag .room-tag-hole { background: var(--pink); }
+.collage-room-tag::before { content: ''; position: absolute; bottom: calc(100% - 3px); left: 50%; width: 22px; height: 25px; border: 2px solid #8b8590; border-radius: 50%; transform: translateX(-50%); }
+.birthday-collage .collage-pin { position: absolute; z-index: 6; top: 21%; left: 37%; width: 15%; transform: rotate(-18deg); }
+.birthday-collage .collage-ticket { position: absolute; z-index: 4; left: 1%; bottom: 3%; width: 45%; transform: rotate(-5deg); }
+.birthday-collage .collage-lotus { position: absolute; z-index: 4; bottom: 7%; left: 51%; width: 19%; padding: 4px; background: var(--paper); border-radius: 50%; transform: rotate(8deg); }
+.birthday-collage .collage-chain { position: absolute; z-index: 5; bottom: 18%; left: 4%; width: 57%; transform: rotate(9deg); }
+.footer-studio { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 15px; width: 100%; padding-bottom: 15px; margin-bottom: 5px; border-bottom: 1px dashed var(--line); }
+.footer-studio > span:not(.studio-motif) { font-size: 8px; letter-spacing: 1.2px; }
+.footer-studio strong { color: var(--red); font-family: var(--serif); font-size: 15px; font-weight: 400; }
+.birthday-ribbon > .studio-motif { width: 90px; }
+.ribbon-room { padding: 4px 8px; border: 1px solid var(--red); color: var(--red); letter-spacing: 2px; }
+.section-heading > .section-lotus { width: 65px; margin-bottom: 10px; }
+.celebration-card > .celebration-pin { position: absolute; top: -10px; right: 24px; width: 52px; transform: rotate(-12deg); }
+.celebration-card > .celebration-glasses { position: absolute; top: -19px; right: 24px; width: 64px; padding: 4px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); transform: rotate(9deg); }
+.story-motifs { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 18px; }
+.story-motifs .decoration--bow { width: 48px; height: 42px; --bow-color: var(--accent); }
+.story-motifs .studio-motif--chain { width: 80px; }
+.story-motifs .studio-motif--lotus { width: 48px; }
+.memory-scrapbook { position: relative; min-width: 0; padding: 20px 10px 30px; border: 1px solid #b298a3; border-radius: 7px; background: linear-gradient(#fffdf8f0, #fffdf8f0), var(--tartan), var(--pink); box-shadow: 5px 5px 0 #dfccd6; }
+.memory-scrapbook-label { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--berry); }
+.memory-scrapbook-label > span:not(.studio-motif) { font-size: 7px; font-weight: 700; letter-spacing: 1px; }
+.memory-scrapbook-label .studio-motif { width: 72px; }
+.memory-scrapbook .memory-pair { padding-bottom: 50px; }
+.memory-scrapbook > .memory-ticket { position: absolute; bottom: 5px; left: 22%; width: 58%; padding: 8px; transform: rotate(-4deg); }
+.memory-ticket .ticket-copy strong { font-size: 20px; }
+.memory-ticket .ticket-copy { gap: 4px; }
+/* Keep the four signatures on phones; reserve secondary jewelry/lotus for space. */
+@media (max-width: 599px) {
+  .birthday-collage .collage-chain, .birthday-collage .collage-lotus, .birthday-collage .collage-pin { display: none; }
+  .collage-ticket .ticket-copy strong { font-size: 17px; }
+  .collage-ticket .ticket-copy { gap: 4px; }
+  .collage-ticket .ticket-copy small { font-size: 5px; letter-spacing: .7px; }
+  .collage-ticket .ticket-copy > span { font-size: 5px; letter-spacing: .4px; }
+  .collage-ticket .ticket-side { width: 17px; margin-right: 7px; padding-right: 5px; font-size: 6px; }
+  .collage-flyer .flyer-subtitle, .collage-flyer .flyer-footer { display: none; }
+  .collage-flyer > .studio-motif { width: 55%; }
+  .birthday-ribbon .ribbon-room { display: none; }
+}
+@media (min-width: 900px) {
+  .hero-signature { justify-content: flex-start; margin-top: 18px; }
+  .birthday-collage .collage-glasses { width: 28%; }
+  .story-motifs { justify-content: flex-start; }
+}

@@ -3,6 +3,8 @@ import { Navigate } from 'react-router-dom'
 import ActionLink from './ActionLink.jsx'
 import Decoration from './Decoration.jsx'
 import Icon from './Icon.jsx'
+import StudioMotif from './StudioMotif.jsx'
+import StudioSignature from './StudioSignature.jsx'
 import PrivateAccessState from './PrivateAccessState.jsx'
 import useAuth from '../hooks/useAuth.js'
 import { getPrivateArea, isPermanentSession, normalizeOwnProfile } from '../auth/authAccess.js'
@@ -63,7 +65,7 @@ export default function PrivateLogin({ area }) {
     <section className={`private-page private-login-page container private-login-page--${area}`} aria-labelledby="private-login-title">
       <ActionLink to="/" variant="text" icon="back" className="private-back">Back to the celebration</ActionLink>
       <header className="private-intro">
-        <Decoration type={ayesa ? 'bow' : 'sparkle'} />
+        <div className={`private-login-art${ayesa ? '' : ' private-login-art--admin'}`} aria-hidden="true"><StudioMotif type="room-tag" /><div><StudioMotif type={ayesa ? 'glasses' : 'safety-pin'} /><Decoration type={ayesa ? 'bow' : 'sparkle'} /></div></div>
         <p className="eyebrow">{ayesa ? 'For the birthday girl' : 'Behind the birthday magic'}</p>
         <h1 id="private-login-title">{ayesa ? <>A little corner,<br /><em>just for Ayesa.</em></> : <>The birthday<br /><em>admin corner.</em></>}</h1>
         <p>{ayesa ? 'Your birthday memories will have a home here. Sign in to your private space.' : 'A quiet place to look after the celebration. Sign in to continue.'}</p>
@@ -93,6 +95,7 @@ export default function PrivateLogin({ area }) {
         </button>
         <p className="private-login-status" role="status" aria-live="polite">{busy ? 'Opening your private space…' : ''}</p>
       </form>
+      <StudioSignature className="private-login-signature" />
     </section>
   )
 }

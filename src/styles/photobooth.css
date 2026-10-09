@@ -1,4 +1,4 @@
-/* Phase 2 styles are scoped to the booth flow; the landing styles stay intact. */
+/* Studio UI surrounds the prints; configured print artwork stays unchanged. */
 .booth-page { padding-block: 18px 55px; }
 .booth-page > .back-link { margin-bottom: 20px; }
 .booth-sr-only {
@@ -35,27 +35,27 @@
   top: 14px;
   left: calc(50% + 20px);
   width: calc(100% - 40px);
-  border-top: 1px dashed #d9c6d2;
+  border-top: 1px dashed #b298a3;
 }
 .booth-step-number {
   display: grid;
   place-items: center;
   width: 29px;
   height: 29px;
-  border: 1px solid #d6c0ce;
+  border: 1px solid #b298a3;
   border-radius: 50%;
   background: var(--paper);
   font-size: 11px;
 }
 .booth-step-number .icon { width: 15px; height: 15px; }
 .booth-steps .is-complete { color: var(--berry); }
-.booth-steps .is-complete .booth-step-number { background: #f8e3eb; border-color: #c798ac; }
-.booth-steps [aria-current="step"] { color: var(--berry); font-weight: 600; }
+.booth-steps .is-complete .booth-step-number { background: var(--pink); border-color: #a48291; }
+.booth-steps [aria-current="step"] { color: var(--accent); font-weight: 700; }
 .booth-steps [aria-current="step"] .booth-step-number {
   color: #fffafc;
-  background: var(--berry);
-  border-color: var(--berry);
-  box-shadow: 0 0 0 4px #f9e2eb;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--pink);
 }
 .booth-heading { max-width: 650px; margin: 0 auto 29px; text-align: center; }
 .booth-heading h1 {
@@ -65,8 +65,10 @@
   letter-spacing: -1.2px;
 }
 .booth-heading h1 em { color: var(--berry); font-weight: 400; }
+.booth-heading::after { content: ''; display: block; width: 72px; height: 7px; margin: 20px auto 0; border-top: 1px solid #b298a3; background: radial-gradient(circle at 3px 0, transparent 2px, #b298a3 2px 3px, transparent 3px) 0 0 / 6px 6px repeat-x; }
 .booth-heading > p:last-child { max-width: 490px; margin-inline: auto; color: var(--muted); font-size: 13px; }
 .booth-heading .eyebrow { font-size: 9px; }
+.booth-heading .booth-studio-signature { justify-content: center; margin: 0 auto 18px; }
 .booth-notice {
   margin-bottom: 20px;
   padding: 14px 17px;
@@ -78,7 +80,7 @@
 }
 
 /* Real buttons expose selection with aria-pressed as well as text and a check. */
-.booth-format-grid { display: grid; gap: 14px; }
+.booth-format-grid { display: grid; gap: 14px; counter-reset: format-ticket; }
 .selection-card {
   display: grid;
   grid-template-columns: 85px minmax(0, 1fr);
@@ -87,32 +89,32 @@
   width: 100%;
   min-width: 0;
   padding: 18px 16px;
-  border: 2px solid #e5d1db;
-  border-radius: 21px;
+  border: 2px solid var(--line);
+  border-radius: 18px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 0 4px 0 #f0e2e6;
+  box-shadow: 2px 4px 0 #3027300b;
   text-align: left;
   transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 .selection-card.is-selected {
-  border-color: var(--berry);
-  background: #fff1f6;
-  box-shadow: 0 4px 0 #e7c6d4, 0 5px 18px #9443600a;
+  border-color: var(--accent);
+  background: #f8e8ee;
+  box-shadow: 2px 4px 0 #d7b7c5;
 }
 .selection-card:active { transform: scale(0.99); }
 .selection-card-content { display: flex; flex-direction: column; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
 .selection-card-title { font-family: var(--serif); font-size: 21px; line-height: 1.15; letter-spacing: -0.3px; }
 .selection-card-dimensions { color: var(--berry); font-size: 11px; line-height: 1.6; }
 .selection-card-description { color: var(--muted); font-size: 11px; line-height: 1.7; }
-.selection-card-state { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; color: var(--berry); font-size: 11px; font-weight: 600; }
+.selection-card-state { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; color: var(--accent); font-size: 11px; font-weight: 600; }
 .selection-circle { width: 17px; height: 17px; border: 1px solid #a7768e; border-radius: 50%; }
 .selection-card-state .icon {
   width: 18px;
   height: 18px;
   padding: 2px;
   color: white;
-  background: var(--berry);
+  background: var(--accent);
   border-radius: 50%;
   animation: booth-check-in 180ms ease-out;
 }
@@ -201,13 +203,13 @@
   gap: 14px;
   padding: 17px;
   margin-top: 25px;
-  border: 1px solid #dcbecb;
-  border-radius: 19px;
+  border: 1px solid #b298a3;
+  border-radius: 16px;
   background: var(--paper);
-  box-shadow: 0 8px 25px #70546515;
+  box-shadow: 2px 4px 0 #3027300b;
 }
 .booth-selection-summary { display: flex; align-items: center; gap: 11px; min-width: 0; }
-.booth-selection-heart { display: grid; place-items: center; flex-shrink: 0; width: 35px; height: 35px; background: #f8e2eb; color: var(--berry); border-radius: 50%; }
+.booth-selection-heart { display: grid; place-items: center; flex-shrink: 0; width: 35px; height: 35px; background: var(--pink); color: var(--accent); border: 1px dashed #a48291; border-radius: 50%; }
 .booth-selection-heart .icon { width: 16px; height: 16px; }
 .booth-selection-summary p { min-width: 0; line-height: 1.6; font-size: 12px; overflow-wrap: anywhere; }
 .booth-selection-summary strong, .booth-selection-summary p > span { display: block; }
@@ -217,16 +219,16 @@
 .booth-bottom-note { margin-top: 24px; color: var(--muted); text-align: center; font-family: var(--serif); font-style: italic; font-size: 13px; }
 
 /* Mock design cards use the same four frames, with format-specific themes. */
-.booth-format-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 19px; border: 1px solid #dfd0e8; border-radius: 16px; background: #f3edf8; }
-.booth-format-summary > div { display: flex; flex-direction: column; gap: 3px; }
-.booth-format-summary strong { font-size: 13px; color: #684974; }
-.booth-format-summary span { font-size: 10px; color: #735b7f; }
+.booth-format-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 19px; border: 1px solid #c4b3cc; border-left: 3px solid var(--accent); border-radius: 12px; background: #eee7f3; }
+.booth-format-summary > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.booth-format-summary strong { font-size: 13px; color: var(--accent); }
+.booth-format-summary span { font-size: 10px; color: var(--muted); }
 .booth-format-summary > .button { font-size: 10px; text-align: left; }
 .booth-format-summary .icon { width: 13px; height: 13px; }
 .booth-preview-note { margin-bottom: 20px; color: var(--muted); text-align: center; font-size: 10px; }
 .booth-design-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 13px; }
 .design-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 13px; padding: 13px 10px 17px; }
-.design-card .booth-preview-stage { height: 185px; margin: 0 2px; border-radius: 13px; background: #f8f0f2; padding: 15px; }
+.design-card .booth-preview-stage { height: 185px; margin: 0 2px; border: 1px solid #dfccd3; border-radius: 10px; background: var(--plaid), #f4ecee; padding: 15px; }
 .design-card .booth-print--vertical-strip { width: 50px; }
 .design-card .booth-print--portrait-grid { width: 100px; }
 .design-card .booth-print--landscape-grid { width: 140px; }
@@ -261,8 +263,8 @@
 .booth-ready-actions { display: flex; flex-direction: column; gap: 12px; }
 
 @media (hover: hover) {
-  .selection-card:hover { border-color: #b87d98; background: #fff6f9; }
-  .selection-card.is-selected:hover { border-color: var(--berry); background: #ffedf4; }
+  .selection-card:hover { border-color: #a48291; background: #fcf1f4; }
+  .selection-card.is-selected:hover { border-color: var(--accent); background: #f4dfe7; }
 }
 @media (min-width: 375px) {
   .selection-card { grid-template-columns: 100px minmax(0, 1fr); padding: 20px; gap: 19px; }
@@ -335,4 +337,24 @@
 @keyframes booth-check-in {
   from { opacity: 0; transform: scale(0.8); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* Paper tickets and taped sleeves belong to the catalog, outside print artwork. */
+.format-card { position: relative; counter-increment: format-ticket; padding-top: 44px; padding-bottom: 27px; border-color: #a48291; border-radius: 9px; }
+.format-card::before { content: '0' counter(format-ticket) ' / BIRTHDAY SESSION'; position: absolute; top: 11px; left: 16px; right: 16px; padding-bottom: 8px; border-bottom: 1px dashed #a48291; color: var(--red); font-size: 8px; font-weight: 700; line-height: 1.5; letter-spacing: 1.4px; pointer-events: none; }
+.format-card::after { content: '★ ★ ★ ★ ★ ★ ★'; position: absolute; bottom: 8px; right: 16px; color: var(--red); font-size: 7px; line-height: 1; letter-spacing: 1px; pointer-events: none; }
+.format-card .selection-card-content { padding-left: 12px; border-left: 1px dashed #b298a3; }
+.format-card .booth-preview-stage { border-radius: 7px; background: var(--tartan), #f6e7e9; }
+.design-card { position: relative; padding-top: 29px; border-color: #a48291; border-radius: 8px 15px 8px 15px; }
+.design-card::before { content: ''; position: absolute; top: 6px; left: calc(50% - 29px); width: 58px; height: 15px; background: var(--tartan), #d4afbc; clip-path: polygon(0 13%, 7% 0, 18% 12%, 28% 0, 40% 10%, 50% 0, 64% 10%, 75% 0, 87% 13%, 100% 0, 96% 100%, 83% 90%, 72% 100%, 61% 91%, 48% 100%, 35% 90%, 23% 100%, 10% 90%, 0 100%); transform: rotate(-6deg); pointer-events: none; }
+.design-card::after { content: '707'; position: absolute; top: 8px; right: 8px; padding: 2px 4px; border: 1px solid #a48291; color: var(--ink); background: var(--paper); font-family: var(--serif); font-size: 8px; line-height: 1; pointer-events: none; }
+.design-card .booth-preview-stage { background: #f4ecee; border-style: dashed; }
+.booth-format-summary { border-radius: 4px 12px 4px 12px; border-left-width: 5px; }
+.booth-selection-bar { border-top: 5px solid var(--ink); background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--tartan) border-box; }
+@media (min-width: 650px) {
+  .format-card { padding-top: 46px; padding-bottom: 30px; }
+  .format-card .selection-card-content { padding: 17px 0 0; border-left: 0; border-top: 1px dashed #a48291; }
+  .format-card .booth-preview-stage { width: 100%; background: var(--tartan), #f6e7e9; }
+  .design-card { padding-top: 32px; }
+  .design-card::before { width: 70px; left: calc(50% - 35px); height: 17px; }
 }

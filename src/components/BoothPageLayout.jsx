@@ -1,5 +1,6 @@
 import ActionLink from './ActionLink.jsx'
 import BoothSteps from './BoothSteps.jsx'
+import StudioSignature from './StudioSignature.jsx'
 
 export default function BoothPageLayout({
   currentStep, eyebrow, title, description,
@@ -12,6 +13,7 @@ export default function BoothPageLayout({
       </ActionLink>
       <BoothSteps currentStep={currentStep} />
       <header className="booth-heading">
+        <StudioSignature className="booth-studio-signature" />
         <p className="eyebrow">{eyebrow}</p>
         <h1>{title}</h1>
         <p>{description}</p>

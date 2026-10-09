@@ -1,6 +1,7 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import Decoration from '../components/Decoration.jsx'
 import Icon from '../components/Icon.jsx'
+import StudioMotif from '../components/StudioMotif.jsx'
 import useAuth from '../hooks/useAuth.js'
 
 function CountStatus({ resource, children }) {
@@ -17,7 +18,7 @@ export default function AyesaOverviewPage() {
   const { messages, gallery } = useOutletContext()
   return <section aria-labelledby="birthday-overview-title">
     <header className="birthday-page-intro birthday-overview-intro">
-      <Decoration type="bow" />
+      <div className="birthday-welcome-art" aria-hidden="true"><Decoration type="bow" /><StudioMotif type="lotus" /></div>
       <p className="eyebrow">A little birthday love, just for you</p>
       <h1 id="birthday-overview-title">Welcome, <em>{profile.display_name || 'Ayesa'}</em> ♡</h1>
       <p>This little corner is filled with memories made for you.</p>
@@ -25,6 +26,7 @@ export default function AyesaOverviewPage() {
     </header>
     <div className="birthday-overview-grid">
       <article className="birthday-overview-card birthday-overview-card--letters">
+        <StudioMotif type="safety-pin" className="birthday-card-pin" />
         <div className="birthday-card-art" aria-hidden="true"><Icon name="mail" /><Decoration type="heart" /></div>
         <p className="eyebrow">Sealed with love</p>
         <h2>Birthday Messages</h2>
@@ -36,6 +38,7 @@ export default function AyesaOverviewPage() {
         <Link className="button button--primary" to="/ayesa/messages"><Icon name="mail" />Open your letters<Icon name="arrow" /></Link>
       </article>
       <article className="birthday-overview-card birthday-overview-card--gallery">
+        <StudioMotif type="seven-stars" className="birthday-card-stars" />
         <div className="birthday-card-art" aria-hidden="true"><Icon name="camera" /><Decoration type="sparkle" /></div>
         <p className="eyebrow">Happy moments, forever</p>
         <h2>Birthday Gallery</h2>

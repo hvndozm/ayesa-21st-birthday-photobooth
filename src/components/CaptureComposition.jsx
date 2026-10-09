@@ -12,9 +12,18 @@ export default function CaptureComposition({
 }) {
   const [inspectedSlot, setInspectedSlot] = useState(null)
   const custom = isCustomDesign(design)
+  const countingDown = countdown !== null && activeSlot >= 0
 
   return (
     <figure className="capture-composition-stage" aria-label={`${format.displayName} in the ${design.name} design`}>
+      {/* Reserve this row so the countdown never moves or covers the photo frames. */}
+      <div className="camera-countdown-area" role="status" aria-live="polite" aria-atomic="true">
+        {countingDown ? <div className="camera-countdown">
+          <span className="camera-countdown-label" aria-hidden="true">Photo {activeSlot + 1}<strong>Hold your pose</strong></span>
+          <span key={countdown} className="camera-countdown-number" aria-hidden="true">{countdown}</span>
+          <span className="booth-sr-only">Photo {activeSlot + 1} in {countdown} {countdown === 1 ? 'second' : 'seconds'}.</span>
+        </div> : <span className="camera-studio-label" aria-hidden="true">Your birthday studio</span>}
+      </div>
       <div className={`booth-print capture-composition booth-print--${format.layout} ${custom ? 'capture-composition--custom' : `booth-print--${design.theme}`}`}
         style={{ aspectRatio: `${format.canvasWidth} / ${format.canvasHeight}` }}>
         <ol className="booth-preview-frames capture-frames" aria-label="Four photo frames">
@@ -36,9 +45,6 @@ export default function CaptureComposition({
                   )}
                   {index === flashSlot && flashNumber > 0 && <span key={flashNumber} className="camera-flash-overlay" aria-hidden="true" />}
                 </div>
-                {active && countdown !== null && <span className="camera-countdown" aria-hidden="true">
-                  <span key={countdown}>{countdown}</span>
-                </span>}
                 <span className="capture-slot-label" aria-hidden="true">{String(index + 1).padStart(2, '0')}{active && ' · Active'}</span>
                 {photo && onRetake && <button type="button" className="capture-retake-button"
                   aria-label={`Retake Photo ${index + 1}`} disabled={busy} onClick={() => onRetake(index)}>

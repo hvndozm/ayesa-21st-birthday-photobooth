@@ -1,13 +1,14 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import Decoration from './Decoration.jsx'
 import Icon from './Icon.jsx'
+import StudioMotif from './StudioMotif.jsx'
 
 export default function SiteLayout() {
   return (
     <div className="site-shell">
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="announcement">
-        <Icon name="sparkle" /><span>A little celebration. A lot of love.</span><Icon name="heart" />
+        <Decoration type="star" /><span>A little celebration. A lot of love.</span><Icon name="heart" />
       </div>
       <header className="site-header container">
         <Link className="brand" to="/" aria-label="Ayesa's birthday photobooth home">
@@ -22,6 +23,7 @@ export default function SiteLayout() {
       </header>
       <main id="main-content" tabIndex={-1}><Outlet /></main>
       <footer className="site-footer container">
+        <div className="footer-studio" aria-hidden="true"><StudioMotif type="seven-stars" /><span>ROOM <strong>707</strong> / WITH LOVE, 21</span></div>
         <p>Made with <Icon name="heart" /> for Eley.</p>
         <span>A happy little keepsake for chapter 21.</span>
         <Link to="/">Back to home <Icon name="arrow" /></Link>

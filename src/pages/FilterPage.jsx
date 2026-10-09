@@ -4,6 +4,7 @@ import BoothPageLayout from '../components/BoothPageLayout.jsx'
 import GeneratedPhotostripPreview from '../components/GeneratedPhotostripPreview.jsx'
 import MissingPhotos from '../components/MissingPhotos.jsx'
 import Icon from '../components/Icon.jsx'
+import StudioMotif from '../components/StudioMotif.jsx'
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
 import { photoboothFilters, getPhotoboothFilter } from '../data/photoboothFilters.js'
 import { getSessionDesign, hasFourPhotos } from '../utils/photoSessionSelection.js'
@@ -40,13 +41,22 @@ export default function FilterPage({ photoSession, savePhotoSession, output }) {
     <div className="camera-selection-label"><span>{format.displayName} · {getFormatDimensions(format)}</span><span>{design.name}</span></div>
     {mockMode && <p className="camera-mock-label">Development Mock Camera · generated placeholders only</p>}
     <div className="result-layout filter-layout">
-      <GeneratedPhotostripPreview output={output} format={format} design={design} filterName={filter.name} onPreviewLoaded={setSeenPreview} />
+      <div className="filter-preview-sleeve">
+        <GeneratedPhotostripPreview output={output} format={format} design={design} filterName={filter.name} onPreviewLoaded={setSeenPreview} />
+        <div className="filter-sleeve-caption" aria-hidden="true">
+          <StudioMotif type="glasses" /><span>Room 707 / Side A</span><StudioMotif type="safety-pin" />
+        </div>
+      </div>
       <div className="filter-details">
-        <p className="eyebrow">Choose your filter</p>
+        <div className="filter-sleeve-heading">
+          <div><span className="filter-sleeve-label" aria-hidden="true">The birthday mix · 5 looks</span><p className="eyebrow">Choose your filter</p></div>
+          <StudioMotif type="record" />
+        </div>
         <div className="filter-options" role="group" aria-label="Photostrip filter, select one">
-          {photoboothFilters.map(option => <button key={option.id} type="button" className="filter-option"
+          {photoboothFilters.map((option, index) => <button key={option.id} type="button" className="filter-option"
             data-filter-id={option.id} aria-pressed={filter.id === option.id} aria-describedby={`filter-${option.id}-description`}
             onClick={() => selectFilter(option.id)}>
+            <span className="filter-track-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
             <span className={`filter-swatch filter-swatch--${option.id}`} aria-hidden="true"><Icon name={filter.id === option.id ? 'check' : 'camera'} /></span>
             <span><strong>{option.name}</strong><span id={`filter-${option.id}-description`}>{option.description}</span></span>
           </button>)}

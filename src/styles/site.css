@@ -1,24 +1,30 @@
+@import './scrapbook.css';
+
 /* Shared page shell */
 .site-shell { display: flex; flex-direction: column; min-height: 100svh; }
 main { flex: 1; }
 .announcement {
   display: flex; align-items: center; justify-content: center; gap: 11px;
-  min-height: 34px; padding: 6px 12px; color: #713d53; background: #f8dfe7;
-  font-size: 10px; letter-spacing: 0.5px;
+  min-height: 34px; padding: 6px 12px; color: #f9e8ee; background: var(--accent);
+  font-size: 10px; letter-spacing: 0.7px;
 }
 .announcement .icon { width: 12px; height: 12px; }
-.site-header { display: flex; flex-direction: column; align-items: center; gap: 15px; padding-block: 22px 8px; }
+.announcement .decoration--star { width: 13px; height: 13px; background: #f4cbd9; }
+.site-header { position: relative; display: flex; flex-direction: column; align-items: center; gap: 15px; padding-block: 22px 8px; border-bottom: 1px solid var(--accent); }
+.site-header::after { content: ''; position: absolute; bottom: -5px; left: 0; right: 0; height: 4px; background: var(--tartan); opacity: .55; }
 .brand { display: flex; align-items: center; gap: 11px; }
-.brand-mark { display: grid; place-items: center; width: 43px; height: 43px; background: #fae4eb; border-radius: 50%; }
-.brand-mark .decoration--bow { width: 33px; height: 30px; }
+.brand-mark { display: grid; place-items: center; width: 43px; height: 43px; border: 1px solid #b298a3; background: var(--plaid), var(--pink); border-radius: 50%; }
+.brand-mark .decoration--bow { width: 33px; height: 30px; --bow-color: var(--accent); }
+.brand-mark .bow-knot { background: var(--berry); }
 .brand-wordmark { font-family: var(--serif); font-size: 31px; line-height: 0.9; letter-spacing: -1.3px; }
 .brand-wordmark > span { display: block; margin-top: 8px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 8px; font-weight: 600; letter-spacing: 1.5px; }
 .site-nav { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; }
 .site-nav a { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 8px 10px; border-radius: 20px; color: var(--muted); font-size: 11px; white-space: nowrap; }
 .site-nav .icon { width: 14px; height: 14px; }
-.site-nav a.active { color: #853a59; background: #f9e4eb; font-weight: 600; }
-.site-nav a:hover { color: var(--berry); }
-.site-footer { display: flex; flex-direction: column; align-items: center; gap: 10px; padding-block: 26px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; text-align: center; }
+.site-nav a.active { color: var(--paper); background: var(--accent); font-weight: 600; }
+.site-nav a:hover { color: var(--berry); text-decoration: underline; text-decoration-color: var(--red); text-underline-offset: 5px; }
+.site-nav a.active:hover { color: var(--paper); background: var(--berry); }
+.site-footer { display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 10px; padding-block: 26px; border-top: 1px solid var(--accent); color: var(--muted); font-size: 11px; text-align: center; }
 .site-footer p, .site-footer a { display: inline-flex; align-items: center; gap: 6px; }
 .site-footer p { color: var(--ink); }
 .site-footer .icon { width: 13px; height: 13px; color: var(--berry); }
@@ -31,6 +37,8 @@ main { flex: 1; }
 .decoration--heart::before { left: 50%; transform: rotate(-45deg); transform-origin: 0 100%; }
 .decoration--heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
 .decoration--sparkle { width: 32px; height: 32px; background: #be8b58; clip-path: polygon(50% 0, 62% 37%, 100% 50%, 62% 63%, 50% 100%, 38% 63%, 0 50%, 38% 37%); }
+/* An original seven-point star; reserved for the studio UI, never print artwork. */
+.decoration--star { width: 28px; height: 28px; background: var(--accent); clip-path: polygon(50% 0, 59.5% 30.2%, 89.1% 18.8%, 71.4% 45.1%, 98.7% 61.1%, 67.2% 63.7%, 71.7% 95%, 50% 72%, 28.3% 95%, 32.8% 63.7%, 1.3% 61.1%, 28.6% 45.1%, 10.9% 18.8%, 40.5% 30.2%); }
 .decoration--cloud { width: 85px; height: 40px; }
 .decoration--cloud::before { content: ''; position: absolute; inset: 13px 0 0; border-radius: 30px; background: #fffafc; box-shadow: 0 3px 0 #e3d0e5; }
 .decoration--cloud::after { content: ''; position: absolute; left: 20%; top: 0; width: 34px; height: 34px; border-radius: 50%; background: #fffafc; box-shadow: 23px 5px 0 -4px #fffafc; }
@@ -63,29 +71,32 @@ main { flex: 1; }
 /* Birthday landing */
 .home-hero { display: grid; gap: 18px; padding-block: 32px 25px; }
 .hero-copy { text-align: center; animation: soft-entrance 650ms ease both; }
-.birthday-tag { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 10px; border: 1px solid #e9d8d0; border-radius: 30px; background: #fcf0e4; color: #775341; font-size: 9px; letter-spacing: 0.3px; }
+.birthday-tag { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 10px; border: 1px solid #b298a3; border-radius: 5px; background: var(--paper); color: var(--berry); font-size: 9px; letter-spacing: 0.7px; text-transform: uppercase; }
 .birthday-tag .icon { width: 13px; height: 13px; }
 .home-hero h1 { margin-block: 21px; font-size: clamp(46px, 12vw, 65px); letter-spacing: -2px; line-height: 1.02; }
 .hero-birthday { display: flex; align-items: center; justify-content: center; gap: 13px; color: var(--berry); font-style: italic; font-size: 1.12em; }
-.hero-birthday .decoration { width: 23px; height: 23px; background: #c99460; }
+.hero-birthday .decoration { width: 23px; height: 23px; background: var(--accent); transform: rotate(12deg); }
 .hero-description { max-width: 380px; margin-inline: auto; color: var(--muted); font-size: 14px; }
 .hero-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
 .hero-postscript { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 20px; color: var(--muted); font-size: 10px; }
 .hero-postscript .icon { width: 13px; height: 13px; color: var(--berry); }
-.birthday-collage { position: relative; width: 100%; max-width: 510px; aspect-ratio: 0.93; margin-inline: auto; isolation: isolate; }
-.collage-halo { position: absolute; z-index: -1; inset: 10% 3% 4%; border-radius: 48% 48% 45% 45%; background-color: #f9e7e9; background-image: linear-gradient(45deg, #fff9f344 25%, transparent 25%, transparent 75%, #fff9f344 75%), linear-gradient(45deg, #fff9f344 25%, transparent 25%, transparent 75%, #fff9f344 75%); background-size: 36px 36px; background-position: 0 0, 18px 18px; transform: rotate(-8deg); }
-.hero-polaroid { position: absolute; z-index: 1; width: 58%; top: 17%; left: 6%; padding: 9px 9px 0; background: var(--paper); box-shadow: 0 8px 24px #794b6120; transform: rotate(-8deg); }
+.birthday-collage { position: relative; width: 100%; max-width: 510px; aspect-ratio: .86; margin: 12px auto 20px; isolation: isolate; }
+.collage-halo { position: absolute; z-index: -1; inset: 15% 6% 13%; border: 1px solid #8e6c7d; border-radius: 5px; background: var(--tartan), #e4c8d4; transform: rotate(-7deg); }
+.hero-polaroid { position: absolute; z-index: 2; width: 52%; top: 24%; left: 7%; padding: 9px 9px 0; border: 1px solid #8e6c7d; background: var(--paper); box-shadow: 3px 8px 0 #30273016, 0 8px 24px #794b6120; transform: rotate(-7deg); }
 .photo-placeholder { display: grid; place-items: center; aspect-ratio: 0.84; background-color: #f6dbe5; background-image: radial-gradient(#ffffff70 1.5px, transparent 1.5px); background-size: 14px 14px; color: #7d4a60; }
 .photo-placeholder--lavender { background-color: #e7ddf0; color: #665177; }
 .photo-placeholder--peach { background-color: #f5e2cf; color: #795641; }
+.homepage-photo-frame { position: relative; width: 100%; aspect-ratio: 0.84; overflow: hidden; background: var(--pink); }
+/* Frame dimensions stay fixed; cover scales each photograph without distortion. */
+.homepage-photo-frame > img, .photostrip-frame > img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .placeholder-content { display: flex; flex-direction: column; align-items: center; gap: 13px; width: 100%; padding: 12px 7px; text-align: center; }
 .placeholder-content > span:not(.decoration) { font-family: var(--serif); font-size: clamp(14px, 4vw, 21px); font-style: italic; line-height: 1.3; }
 .placeholder-content small { font-size: 7px; line-height: 1.6; }
 .placeholder-content .decoration--bow { --bow-color: #c58aa6; width: 64px; height: 54px; }
 .hero-polaroid figcaption, .memory-photo figcaption { padding: 14px 3px 16px; font-family: var(--serif); font-size: clamp(12px, 3.5vw, 19px); font-style: italic; text-align: center; color: #795166; }
-.paper-tape { position: absolute; z-index: 2; top: -11px; left: 33%; width: 37%; height: 24px; background: #e5d7edae; transform: rotate(3deg); border-inline: 2px dashed #f7edf299; }
+.paper-tape { position: absolute; z-index: 2; top: -11px; left: 33%; width: 37%; height: 24px; background: var(--tartan), #d7b5c3ed; transform: rotate(3deg); clip-path: polygon(0 0, 97% 4%, 93% 17%, 100% 31%, 95% 49%, 100% 69%, 95% 85%, 100% 100%, 3% 95%, 7% 80%, 0 65%, 6% 47%, 0 32%, 5% 15%); }
 .photostrip { display: grid; gap: 6px; width: 115px; padding: 9px 9px 0; background: var(--paper); box-shadow: 0 9px 25px #79536b25; }
-.photostrip-frame { display: grid; place-items: center; aspect-ratio: 1.45; background: #f5dfe7; }
+.photostrip-frame { position: relative; display: grid; place-items: center; aspect-ratio: 1.45; overflow: hidden; background: #f5dfe7; }
 .photostrip-frame--lavender { background: #e4daf0; }
 .photostrip-frame--cream { background: #f4eadb; }
 .photostrip-frame .decoration--heart { width: 26px; height: 26px; --heart-color: #c792ad; }
@@ -96,26 +107,28 @@ main { flex: 1; }
 .photostrip-frame .decoration--bow { width: 43px; height: 36px; --bow-color: #c58aa6; }
 .photostrip-caption { padding-block: 7px 12px; font-size: 8px; font-weight: 600; letter-spacing: 1.7px; text-align: center; color: #6f4a63; }
 .photostrip-caption span { margin-inline: 1px; color: var(--berry); }
-.hero-photostrip { position: absolute; z-index: 2; width: 31%; top: 13%; right: 6%; transform: rotate(11deg); }
-.birthday-stamp { position: absolute; top: 3%; right: 3%; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 24%; aspect-ratio: 1; background: #ece2f2; border: 1px dashed #af88bc; outline: 5px solid #ece2f2; border-radius: 50%; transform: rotate(9deg); color: #755087; }
+.hero-photostrip { position: absolute; z-index: 3; width: 27%; top: 23%; right: 6%; border: 1px solid #a88d9c; transform: rotate(8deg); }
+.birthday-stamp { position: absolute; top: 3%; right: 3%; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 24%; aspect-ratio: 1; background: var(--accent); border: 1px dashed #e0b9cc; outline: 5px solid var(--accent); border-radius: 50%; transform: rotate(9deg); color: #f7d9e5; }
 .birthday-stamp > span { font-size: 7px; line-height: 1.8; }
 .birthday-stamp > strong { font-family: var(--serif); font-size: clamp(29px, 9vw, 48px); font-weight: 400; line-height: 1; }
 .collage-cloud { position: absolute; left: 4%; top: 5%; width: 65px; opacity: 0.95; animation: float-softly 4s ease-in-out 3; }
 .collage-sparkle { position: absolute; top: 3%; left: 39%; width: 20px; height: 20px; }
-.collage-bow { position: absolute; left: 3%; bottom: 9%; z-index: 3; width: 65px; height: 57px; transform: rotate(-17deg); --bow-color: #b97999; }
+.collage-bow { position: absolute; left: 1%; bottom: 23%; z-index: 5; width: 65px; height: 57px; transform: rotate(-17deg); --bow-color: var(--accent); }
+.collage-bow .bow-knot { background: var(--berry); }
 .collage-note { position: absolute; bottom: -10px; left: 0; right: 0; font-family: var(--serif); font-size: clamp(12px, 3.7vw, 18px); font-style: italic; text-align: center; color: #8a576e; transform: rotate(-3deg); }
-.birthday-ribbon { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 17px 20px; background: #f4eaf0; border-block: 1px solid #ead9e3; color: #80526c; font-size: 8px; font-weight: 600; letter-spacing: 1.6px; }
-.birthday-ribbon .decoration { width: 12px; height: 12px; background: #bc8ba2; }
+.birthday-ribbon { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 17px 20px; background: var(--pink); border-block: 1px dashed var(--accent); color: var(--accent); font-size: 8px; font-weight: 700; letter-spacing: 1.6px; }
+.birthday-ribbon .decoration { width: 12px; height: 12px; background: var(--accent); }
 .birthday-ribbon > span:nth-of-type(n+4) { display: none; }
 .celebrate-section { padding-block: 54px 30px; }
 .section-heading { margin-bottom: 29px; text-align: center; }
 .section-heading h2 { margin-block: 12px; font-size: 32px; letter-spacing: -1px; line-height: 1.15; }
 .section-heading > p:last-child { font-size: 13px; color: var(--muted); }
 .celebration-cards { display: grid; gap: 18px; }
-.celebration-card { display: flex; flex-direction: column; padding: 25px; border: 1px solid #ecd3dc; border-radius: 23px; background: #fcedf1; }
-.celebration-card--lavender { border-color: #ded2e7; background: #f0eaf6; }
+.celebration-card { position: relative; display: flex; flex-direction: column; padding: 29px 25px 25px; border: 1px solid #a48291; border-radius: 5px 20px 20px 5px; background: #f9e9ee; box-shadow: 5px 5px 0 #e4d1dc; }
+.celebration-card::before { content: ''; position: absolute; top: -9px; left: 20px; width: 65px; height: 22px; background: var(--tartan), var(--pink); transform: rotate(-6deg); clip-path: polygon(2% 0, 100% 5%, 95% 20%, 100% 40%, 95% 60%, 100% 80%, 95% 100%, 0 95%, 5% 75%, 0 55%, 5% 35%, 0 15%); pointer-events: none; }
+.celebration-card--lavender { border-color: #c9bcd3; background: #eee7f3; }
 .card-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; margin-bottom: 16px; }
-.card-number { color: #745068; font-size: 9px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; }
+.card-number { padding: 6px 8px; border: 1px solid #b298a3; border-radius: 4px; color: var(--accent); background: #fffdf866; font-size: 9px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; }
 .card-topline .decoration--camera { width: 64px; height: 51px; transform: rotate(-8deg); }
 .card-topline .camera-top { left: 22px; width: 24px; }
 .card-topline .camera-lens { left: 20px; top: 6px; width: 25px; height: 25px; border-width: 3px; }
@@ -127,15 +140,17 @@ main { flex: 1; }
 .celebration-card .button { align-self: flex-start; margin-top: auto; font-size: 12px; }
 .birthday-story { display: grid; gap: 22px; padding-block: 42px 60px; }
 .story-copy { text-align: center; }
-.story-copy > .decoration { width: 55px; height: 48px; margin-bottom: 14px; --bow-color: #b77b98; }
+.story-copy > .decoration { width: 55px; height: 48px; margin-bottom: 14px; --bow-color: var(--accent); }
 .story-copy h2 { margin-block: 12px 18px; font-size: 33px; letter-spacing: -0.8px; line-height: 1.2; }
 .story-copy > p:not(.eyebrow) { max-width: 430px; margin-inline: auto; color: var(--muted); font-size: 13px; }
 .story-copy .handwritten { display: block; margin-top: 21px; font-size: 23px; }
 .memory-pair { display: flex; align-items: center; gap: 10px; padding: 24px 5px; }
-.memory-photo { width: 50%; min-width: 0; padding: 7px 7px 0; background: var(--paper); box-shadow: 0 4px 18px #72556616; }
+.memory-photo { position: relative; width: 50%; min-width: 0; padding: 7px 7px 0; border: 1px solid #b298a3; background: var(--paper); box-shadow: 2px 4px 0 #3027300a, 0 4px 18px #72556616; }
+.memory-photo::before { content: ''; position: absolute; top: -8px; left: 31%; width: 38%; height: 18px; background: var(--tartan), #e9cad6dd; transform: rotate(-3deg); }
 .memory-photo--first { transform: rotate(-6deg); }
 .memory-photo--second { margin-top: 45px; transform: rotate(7deg); }
 .memory-photo .photo-placeholder { aspect-ratio: 0.9; }
+.memory-photo .homepage-photo-frame { aspect-ratio: 0.9; }
 .memory-photo .placeholder-content { gap: 11px; }
 .memory-photo .placeholder-content > span:not(.decoration) { font-size: 14px; }
 .memory-photo .placeholder-content small { font-size: 6px; }
@@ -147,7 +162,7 @@ main { flex: 1; }
 .welcome-modal {
   width: min(440px, calc(100% - 32px)); max-height: calc(100svh - 32px);
   margin: auto; padding: 27px 22px 22px; overflow-y: auto; overscroll-behavior: contain;
-  border: 1px solid #e6cdd6; border-radius: 27px; background: var(--paper);
+  border: 1px solid #bda4b0; border-top: 5px solid var(--accent); border-radius: 22px; background: var(--paper);
   color: var(--ink); text-align: center; box-shadow: 0 20px 90px #53304433;
 }
 .welcome-modal[open] { animation: modal-entrance 280ms ease-out both; }

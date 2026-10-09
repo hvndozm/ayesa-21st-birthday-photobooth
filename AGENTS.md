@@ -345,3 +345,113 @@ The camera must preserve:
 - four-frame progression
 
 Countdown UI should appear over the active camera frame without hiding the rest of the photostrip.
+
+## Post-Launch UI Refinement
+
+### Countdown Timer Placement
+The optional 5-second timer must remain supported, but the countdown overlay must not block the user’s face or most of the live camera view.
+
+Preferred behavior:
+- Do not place the large countdown number in the center of the active camera frame.
+- Keep the live composition visible while counting down.
+- Countdown should appear in a less obstructive position, such as:
+  - above the photostrip,
+  - near the top or bottom edge of the active frame,
+  - or as a floating badge positioned outside the main facial area.
+- The countdown must still be clear and readable.
+- Preserve timer ON/OFF behavior, retakes, and real/mock camera compatibility.
+
+### Refined Visual Direction
+The site should keep its cute birthday identity, but the visual language should now evolve into a balanced hybrid of:
+
+- soft, cute, pastel, Sanrio-like charm
+- and
+- the stylish, slightly edgy, rock-feminine mood inspired by Nana (2006)
+
+Important:
+- Do not use direct copyrighted characters, logos, title art, or exact branded graphics.
+- Do not directly reproduce Vivienne Westwood logos/orbs.
+- Instead, capture the mood through original design language.
+
+Desired blend:
+- still soft, sweet, and birthday-themed
+- but with touches of:
+  - black accents
+  - seven-star motifs
+  - plaid/tartan hints
+  - lace / ribbon contrasts
+  - editorial / punk-girly styling
+  - elegant serif + stylish accent typography
+  - slightly darker contrast details
+
+The result must NOT become too dark or lose the celebratory birthday feel.
+
+The visual tone should feel like:
+“cute birthday photobooth meets stylish early-2000s shoujo rock fashion.”
+
+Preserve usability, readability, and mobile friendliness.
+
+## Final Visual Direction — Cute × Nana-Inspired
+
+The previous pastel-only redesign was too subtle.
+
+The website should now have an unmistakable hybrid visual identity:
+
+1. Cute, soft birthday / Sanrio-like charm
+2. Early-2000s Japanese punk/shoujo-rock fashion inspired by Nana (2006)
+
+The Nana-inspired influence must be visible through actual recurring decorative motifs and layout treatments, not merely darker colors.
+
+### Key visual motifs
+
+Use original interpretations of:
+
+- strawberry-shaped glasses
+- Room 707 plaques / number motifs
+- lotus flowers
+- seven-star arrangements
+- black stars
+- red stars
+- punk-band flyer/poster graphics
+- microphone / guitar / music motifs
+- chains
+- pearls
+- safety pins
+- padlocks
+- lace
+- tartan / plaid
+- torn paper
+- distressed stickers
+- black ribbon
+- lipstick red details
+- handwritten notes
+- fashion-magazine/editorial labels
+- original orb/crown-inspired punk jewelry motifs
+
+Do not directly reproduce official:
+- Nana anime/manga artwork
+- Nana title logos
+- Black Stones/BLAST official logos
+- Vivienne Westwood trademarks/logos
+- Seven Stars cigarette branding
+- Sanrio characters/logos
+
+Original references and visual equivalents are preferred.
+
+### Balance
+
+The UI must NOT become predominantly black.
+
+Use roughly:
+
+- 65–75% light / cream / blush / soft pink surfaces
+- 15–25% black / charcoal / deep plum structural accents
+- 5–10% red / berry / silver statement accents
+
+The birthday website should still feel romantic, cute, warm, and usable.
+
+Target mood:
+
+“Sanrio sweetness meets Room 707 punk romance.”
+
+The edgy motifs should feel like scrapbook memorabilia, fashion-editorial decorations, stickers, concert flyers, jewelry, and bedroom-wall details rather than a generic dark theme.

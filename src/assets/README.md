@@ -1,11 +1,15 @@
 # Birthday images
 
-This folder is reserved for custom birthday images supplied in a later task.
-The Phase 1 site uses original CSS decorations and labeled image placeholders.
+The homepage uses these local photographs, configured in `src/pages/HomePage.jsx`:
 
-To add a local image later, import it from this folder in the relevant page and
-replace a `PhotoPlaceholder` with an `img` that has meaningful `alt` text.
-The three placeholder areas are in `HomePage.jsx`: the hero portrait and the two
-birthday memory frames. Keep the existing frame styles for consistent sizing.
+- `Main.jfif`: large hero portrait.
+- `strip1.jfif` through `strip4.jfif`: hero photostrip, from top to bottom.
+- `lower1.jfif`: left memory photo.
+- `lower2.jfif`: right memory photo.
 
-No image upload or storage functionality is implemented in Phase 1.
+JFIF files are imported with `?url` so Vite handles them as static image assets.
+Keep filename capitalization consistent when replacing files for deployment.
+
+Photo frames set the display aspect ratio; images use `object-fit: cover` to
+preserve their proportions while filling the frame. This crops edges when needed
+and leaves the original files untouched. Memory photos load lazily below the hero.

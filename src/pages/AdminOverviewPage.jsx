@@ -1,8 +1,10 @@
 import { Link, useOutletContext } from 'react-router-dom'
 import Icon from '../components/Icon.jsx'
+import StudioMotif from '../components/StudioMotif.jsx'
 
 function SummaryCard({ title, icon, to, resource, children }) {
   return <article className="admin-summary-card">
+    <StudioMotif type="safety-pin" className="admin-summary-pin" />
     <span className="private-feature-icon"><Icon name={icon} /></span>
     <h2>{title}</h2>
     <div className="admin-summary-counts" aria-live="polite">

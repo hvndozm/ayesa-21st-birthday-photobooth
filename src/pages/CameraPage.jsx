@@ -5,6 +5,7 @@ import CameraError from '../components/CameraError.jsx'
 import CameraView from '../components/CameraView.jsx'
 import CaptureComposition from '../components/CaptureComposition.jsx'
 import Icon from '../components/Icon.jsx'
+import StudioMotif from '../components/StudioMotif.jsx'
 import useCamera from '../hooks/useCamera.js'
 import useCaptureTimer from '../hooks/useCaptureTimer.js'
 import { getPhotoboothFormat, getFormatDimensions } from '../data/photoboothFormats.js'
@@ -143,7 +144,7 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
   function handleShutter() {
     if (busy.current || !previewReady || activeSlot < 0 || photosRef.current[activeSlot] || timer.isRunning()) return
     if (timer.enabled) {
-      panelRef.current?.querySelector('.capture-composition')?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+      panelRef.current?.querySelector('.capture-composition-stage')?.scrollIntoView({ block: 'nearest', behavior: 'instant' })
       setMessage(`5 second timer started for Photo ${activeSlot + 1}. Hold your pose.`)
     }
     timer.trigger(takePhoto)
@@ -186,9 +187,9 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
 
   return (
     <BoothPageLayout currentStep={3} className="camera-page"
-      eyebrow="A little pose. A little birthday magic."
+      eyebrow="Your birthday studio · Take the spotlight"
       title={<>Frame a little <em>happy.</em></>}
-      description="One tap, one little moment. Fill your four frames with birthday love."
+      description="Find your light, strike a pose, and make four birthday memories."
       backTo={designsUrl} backLabel="Back to Designs">
       <div className="camera-selection-label"><span>{format.displayName} · {getFormatDimensions(format)}</span><span>{design.name}</span></div>
       <p className="camera-gallery-notice"><Icon name="heart" />Your finished photostrip will be saved privately so Ayesa can keep the birthday memories.</p>
@@ -198,6 +199,10 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
       </p>}
       <p className="booth-sr-only" role="status" aria-live="polite" aria-atomic="true">{message}</p>
       <div ref={panelRef} className="camera-panel">
+        <div className="camera-studio-topline" aria-hidden="true">
+          <span className="camera-session-stamp"><span>{cameraIsOpen ? 'LIVE' : 'STUDIO'}</span>Birthday session</span>
+          <StudioMotif type="room-tag" className="camera-room-tag" />
+        </div>
         <div className="camera-live-header">
           <span>{allCaptured ? 'All four moments, ready!' : `Photo ${activeSlot + 1} of 4 · Active`}</span>
           <span>{capturedCount}/4 captured</span>
@@ -215,8 +220,11 @@ function CaptureSession({ format, design, mockMode, photoSession, savePhotoSessi
             onClick={() => timer.setEnabled(!timer.enabled)}>
             <span>5s Timer</span><strong>{timer.enabled ? 'On' : 'Off'}</strong>
           </button>
-          {isCountingDown && <button type="button" className="camera-icon-button" onClick={cancelCountdown}
+          {isCountingDown && <button type="button" className="camera-icon-button camera-timer-cancel" onClick={cancelCountdown}
             aria-label="Cancel countdown">Cancel</button>}
+        </div>
+        <div className="camera-control-signature" aria-hidden="true">
+          <StudioMotif type="seven-stars" /><span>Room 707 session</span><StudioMotif type="safety-pin" />
         </div>
         {allCaptured ? <div className="camera-primary-action">
           <button ref={confirmRef} type="button" className="button button--primary camera-confirm" onClick={confirmPhotos}>
